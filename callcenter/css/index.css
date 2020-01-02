@@ -1,0 +1,101 @@
+@import "compass/css3";
+
+body {
+	font-family: Microsoft JhengHei;
+	background-color: #DADADA;
+}
+body > .grid {
+	height: 100%;
+}
+
+#header{
+	display: flex;
+    align-items: center;
+	width: 100%;
+	height: 10%;
+	color: #FFFFFF;
+	background-color: #4b667b;
+
+}
+
+#header .title{
+	margin:0px auto;
+    text-align:center;
+	font-size:2rem;
+}
+
+#header .title a{
+ 	color:white
+}
+
+#header .title a:hover{
+ 	color:white
+}
+
+.image {
+	margin-top: -100px;
+}
+
+.ui[class*="center aligned"].grid{
+	height:90%;
+}
+
+.column {
+	max-width: 900px;
+}
+
+.ui.sdc-blue.header {
+	color: #4b667b;
+}
+
+.ui.sdc-blue.button{
+	background-color: #4b667b;
+	color: #FFFFFF;
+}
+
+.ui.sdc-blue.button a{
+	background-color: #4b667b;
+	color: #FFFFFF;
+}
+
+.ui.sdc-blue.button:hover {
+	background-color: #117692;
+	color: #FFFFFF;
+	text-shadow: none; 
+}
+
+.ui.sdc-blue.button a:hover {
+	background-color: #117692;
+	color: #FFFFFF;
+	text-shadow: none; 
+}
+
+.bold{
+	font-weight: bold ; 
+	background-color: #393A3A ;
+	color: #FFFFFF;
+}
+
+table {
+	width: 100%; 
+	text-align: left;
+}
+
+tr {
+	height: 2rem;
+}
+
+tr:hover {
+	background-color: #CCE2FF;
+}
+
+th {
+	background-color: #bbcedf;
+}
+td {
+	border-bottom: 1px solid #dddddd;
+}
+
+button, input, optgroup, select, textarea{
+	font-family: Microsoft JhengHei;
+}
