@@ -194,7 +194,8 @@ function authLdapAction($callback, $user, &$object)
 			$user_search = "distinguishedName=" . $dn;
 		    //edited by kkc on20190910  	
 			$displayname = $entries[0]["displayname"][0];
-		    $_SESSION["displayname"] = $displayname; 
+			//echo $displayname;
+			$_SESSION["displayname"] = $displayname; 
           }
           else
           {

@@ -17,6 +17,7 @@ if(checkAccountByLDAP($account, $password) && $row['name'] == $account){
 	session_start();
 	$_SESSION['account']	= $account;
 	$_SESSION['UserName']   = $row['UserName'];
+	//echo session_id();
 	//echo $row['Level']; 
 	if($row['level'] == 2){
 		$_SESSION['Level'] = $row['Level'];

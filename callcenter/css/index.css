@@ -38,6 +38,7 @@ body > .grid {
 
 .ui[class*="center aligned"].grid{
 	height:90%;
+	justify-content: center;
 }
 
 .column {

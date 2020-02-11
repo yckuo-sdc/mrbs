@@ -7,7 +7,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta http-equiv="Content-Type" content="text/html; charset=big5" />
-<title>臺南市政府 智慧發展中心</title>
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<title>會議室預約系統</title>
 <meta name="keywords" content="" />
 <meta name="description" content="" />
 <link href="https://fonts.googleapis.com/css?family=Open+Sans:400,300,600,700|Archivo+Narrow:400,700" rel="stylesheet" type="text/css">
@@ -100,7 +101,7 @@
 
 		</form>
 		<div class="ui message">
-			SDC-MRBS System
+			<a href="https://sdc-mrbs.tainan.gov.tw/month.php?room=3" target="_blank">SDC-MRBS System</a>
 		 </div>
 	  </div>
 	</div>

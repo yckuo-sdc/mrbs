@@ -7,6 +7,7 @@ function confirm_func(id,page) {
 
 $( document ).ready(function() {
 
+	document.domain = "tainan.gov.tw";
 	$("#checkAll").click(function() {
 	   if($("#checkAll").prop("checked")) {
 		 $("input[name='id[]']").each(function() {
