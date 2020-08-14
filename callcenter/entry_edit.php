@@ -142,7 +142,7 @@
 	//顯示編輯表單
 	?>
 			
-		<form id="reg-form" action="entry_edit.php?action=update&id=<?php echo $id ?>" method="post" enctype="multipart/form-data">
+		<form id="reg-form" action="entry_edit.php?action=update&id=<?php echo $id ?>&page=<?php echo $page?>" method="post" enctype="multipart/form-data">
 			<div class="register">
 				<p>
 				<label>預約日期</label>

@@ -17,19 +17,37 @@ $vocab["report"]             = "Report";
 $vocab["admin"]              = "Admin";
 $vocab["help"]               = "Help";
 $vocab["search"]             = "Search";
-$vocab["outstanding"]        = "pending bookings";
+$vocab["outstanding"]        = "%d pending bookings";
 
-// Used in day.php
+// Used in index.php
 $vocab["bookingsfor"]        = "Bookings for";
 $vocab["bookingsforpost"]    = ""; // Goes after the date
 $vocab["areas"]              = "Areas";
-$vocab["daybefore"]          = "Go To Day Before";
-$vocab["dayafter"]           = "Go To Day After";
-$vocab["gototoday"]          = "Go To Today";
+$vocab["today"]              = "Today";
+$vocab["daybefore"]          = "Go to day before";
+$vocab["dayafter"]           = "Go to day after";
+$vocab["gototoday"]          = "Go to today";
 $vocab["goto"]               = "Go to";
+$vocab["nav_day"]            = "Day";
+$vocab["nav_week"]           = "Week";
+$vocab["nav_month"]          = "Month";
 $vocab["highlight_line"]     = "Highlight this line";
 $vocab["click_to_reserve"]   = "Click on the cell to make a reservation.";
 $vocab["timezone"]           = "Timezone";
+$vocab["weekbefore"]         = "Go to week before";
+$vocab["weekafter"]          = "Go to week after";
+$vocab["gotothisweek"]       = "Go to this week";
+$vocab["monthbefore"]        = "Go to month before";
+$vocab["monthafter"]         = "Go to month after";
+$vocab["gotothismonth"]      = "Go to this month";
+$vocab["no_rooms_for_area"]  = "No rooms defined for this area";
+$vocab["loading"]            = "Loading";
+$vocab["saving"]             = "Saving";
+$vocab["week_number"]        = "Week %s | ";
+$vocab["create_new_booking"] = "Create a new booking";
+$vocab["select_area"]        = "Select area";
+$vocab["select_room"]        = "Select room";
+$vocab["all"]                = "<all>";
 
 // Used in trailer.inc
 $vocab["viewday"]            = "View Day";
@@ -59,10 +77,12 @@ $vocab["minute_lc"]          = "minute";
 $vocab["minutes"]            = "minutes";
 $vocab["hour_lc"]            = "hour";
 $vocab["hours"]              = "hours";
-$vocab["day_lc"]             = "day";
+$vocab["day"]                = "day";
 $vocab["days"]               = "days";
-$vocab["week_lc"]            = "week";
+$vocab["week"]               = "week";
 $vocab["weeks"]              = "weeks";
+$vocab["month"]              = "month";
+$vocab["months"]             = "months";
 $vocab["year_lc"]            = "year";
 $vocab["years"]              = "years";
 $vocab["period_lc"]          = "period";
@@ -89,18 +109,15 @@ $vocab["ord_-4"]             = "fourth last";
 $vocab["ord_-5"]             = "fifth last";
 $vocab["rep_end_date"]       = "Repeat end date";
 $vocab["rep_rep_day"]        = "Repeat day";
-$vocab["rep_freq"]           = "Frequency";
-$vocab["rep_num_weeks"]      = "Repeat every";
+$vocab["rep_interval"]       = "Repeat every";
 $vocab["month_absolute"]     = "On day";
 $vocab["month_relative"]     = "On the";
 $vocab["skip_conflicts"]     = "Skip past conflicts";
 $vocab["no_mail"]            = "Do not send email";
 $vocab["ctrl_click"]         = "Use Control-Click to select more than one room";
 $vocab["entryid"]            = "Entry ID ";
-$vocab["repeat_id"]          = "Repeat ID "; 
-$vocab["you_have_not_entered"] = "You have not entered a";
+$vocab["repeat_id"]          = "Repeat ID ";
 $vocab["brief_description"]  = "Brief description.";
-$vocab["useful_n-weekly_value"] = "useful repeat frequency.";
 $vocab["status"]             = "Status";
 $vocab["public"]             = "Public";
 $vocab["private"]            = "Private";
@@ -110,6 +127,7 @@ $vocab["missing_mandatory_field"] = "You have not supplied a value for the manda
 $vocab["confirmed"]          = "Confirmed";
 $vocab["start_after_end"]    = "Start day after end day";
 $vocab["start_after_end_long"] = "Error: the start day cannot be after the end day.";
+$vocab["invalid_rep_interval"] = "The repeat interval must be greater than zero.";
 
 // Used in view_entry.php
 $vocab["description"]         = "Description";
@@ -163,28 +181,28 @@ $vocab["failed_to_acquire"]      = "Failed to acquire exclusive database access"
 $vocab["invalid_booking"]        = "Invalid booking";
 $vocab["must_set_description"]   = "You must set a brief description for the booking. Please go back and enter one.";
 $vocab["no_rooms_selected"]      = "You must select a room.";
-$vocab["mail_subject_approved"]  = "Entry approved for $mrbs_company MRBS";
-$vocab["mail_subject_rejected"]  = "Entry rejected for $mrbs_company MRBS";
-$vocab["mail_subject_more_info"] = "$mrbs_company MRBS: more information requested";
-$vocab["mail_subject_reminder"]  = "Reminder for $mrbs_company MRBS";
-$vocab["mail_body_approved"]     = "An entry has been approved by the administrators; here are the details:";
-$vocab["mail_body_rej_entry"]    = "An entry has been rejected by the administrators, here are the details:";
-$vocab["mail_body_more_info"]    = "The administrators require more information about an entry; here are the details:";
+$vocab["mail_subject_approved"]  = "Entry approved for %s MRBS"; // $mrbs_company
+$vocab["mail_subject_rejected"]  = "Entry rejected for %s MRBS"; // $mrbs_company
+$vocab["mail_subject_more_info"] = "%s MRBS: more information requested"; // $mrbs_company
+$vocab["mail_subject_reminder"]  = "Reminder for %s MRBS"; // $mrbs_company
+$vocab["mail_body_approved"]     = "An entry has been approved by %s; here are the details:";
+$vocab["mail_body_rej_entry"]    = "An entry has been rejected by %s, here are the details:";
+$vocab["mail_body_more_info"]    = "%s requires more information about an entry; here are the details:";
 $vocab["mail_body_reminder"]     = "Reminder - an entry is awaiting approval; here are the details:";
 $vocab["mail_body_repeats_booked"]   = "The following dates were booked:";
 $vocab["mail_body_repeats_deleted"]  = "The following bookings were deleted:";
 $vocab["mail_body_exceptions"]       = "The following dates could not be booked due to conflicts:";
-$vocab["mail_subject_new_entry"]     = "Entry added for $mrbs_company MRBS";
-$vocab["mail_subject_changed_entry"] = "Entry changed for $mrbs_company MRBS";
-$vocab["mail_subject_delete"]        = "Entry deleted for $mrbs_company MRBS";
-$vocab["mail_body_new_entry"]     = "A new entry has been booked, here are the details:";
-$vocab["mail_body_changed_entry"] = "An entry has been modified, here are the details:";
-$vocab["mail_body_del_entry"]     = "An entry has been deleted, here are the details:";
+$vocab["mail_subject_new_entry"]     = "Entry added for %s MRBS"; // $mrbs_company
+$vocab["mail_subject_changed_entry"] = "Entry changed for %s MRBS"; // $mrbs_company
+$vocab["mail_subject_delete"]        = "Entry deleted for %s MRBS"; // $mrbs_company
+$vocab["mail_body_new_entry"]     = "A new entry has been booked by %s, here are the details:";
+$vocab["mail_body_changed_entry"] = "An entry has been modified by %s, here are the details:";
+$vocab["mail_body_del_entry"]     = "An entry has been deleted by %s, here are the details:";
 $vocab["new_value"]               = "New";
 $vocab["old_value"]               = "Old";
-$vocab["deleted_by"]              = "Deleted by";
 $vocab["reason"]                  = "Reason";
 $vocab["info_requested"]          = "Information requested";
+$vocab["cannot_change_approved_bookings"] = "Bookings that have been approved cannot be edited or deleted";
 $vocab["min_create_time_before"]  = 'You cannot create a booking which starts in less than %1$d %2$s';
 $vocab["max_create_time_before"]  = 'You cannot create a booking which ends in more than %1$d %2$s';
 $vocab["min_delete_time_before"]  = 'You cannot edit or delete a booking which starts in less than %1$d %2$s';
@@ -204,7 +222,6 @@ $vocab["max_per_year_area"]       = "The maximum number of bookings per year per
 $vocab["max_per_future_area"]     = "The maximum number of outstanding bookings per user in this area is";
 $vocab["skip_and_book"]           = "Skip and book";
 $vocab["skip_and_book_note"]      = "Carry on with the booking, skipping past the conflicting entries";
-$vocab["changes_saved"]           = "Changes saved";
 
 // Used in pending.php
 $vocab["pending"]            = "Bookings awaiting approval";
@@ -228,7 +245,7 @@ $vocab["username_or_email"]  = "Username or email address";
 $vocab["database_login"]           = "Database login";
 $vocab["upgrade_required"]         = "To complete the upgrade the database now needs to be upgraded.  Please backup your database before proceeding.";
 $vocab["supply_userpass"]          = "Please supply a database username and password that has admin rights.";
-$vocab["contact_admin"]            = "If you are not the MRBS administrator please contact $mrbs_admin.";
+$vocab["contact_admin"]            = "If you are not the MRBS administrator please contact %s."; // $mrbs_admin
 $vocab["upgrade_to_version"]       = "Upgrading to database version";
 $vocab["upgrade_to_local_version"] = "Upgrading to database local version";
 $vocab["upgrade_completed"]        = "Database upgrade completed.";
@@ -240,7 +257,7 @@ $vocab["level_2"]            = "admin";
 $vocab["level_3"]            = "user admin";
 
 // Authentication database
-$vocab["user_list"]          = "User list";
+$vocab["user_list"]          = "Users";
 $vocab["edit_user"]          = "Edit user";
 $vocab["delete_user"]        = "Delete this user";
 //$vocab["users.name"]         = Use the same as above, for consistency.
@@ -262,8 +279,10 @@ $vocab["administrator"]      = "Administrator";
 $vocab["unknown"]            = "Unknown";
 $vocab["ok"]                 = "OK";
 $vocab["show_my_entries"]    = "Click to display my upcoming entries";
-$vocab["no_users_initial"]   = "No users in database, allowing initial user creation";
-$vocab["no_users_create_first_admin"] = "Create a user configured as an administrator and then you can log in and create more users.";
+$vocab["no_users_initial"]   = "Welcome to MRBS!";
+$vocab["no_users_create_first_admin"] = "Before you can do anything else you need to create an admin " .
+                                        "user. Then login as that user and create more users and create " .
+                                        "areas and rooms.";
 $vocab["warning_last_admin"] = "Warning!  This is the last admin and so you cannot delete this user or remove admin rights, otherwise you will be locked out of the system.";
 
 // Used in search.php
@@ -276,9 +295,8 @@ $vocab["of"]                 = " of ";
 $vocab["previous"]           = "Previous";
 $vocab["next"]               = "Next";
 $vocab["entry"]              = "Entry";
-$vocab["advanced_search"]    = "Advanced search";
 $vocab["search_button"]      = "Search";
-$vocab["search_for"]         = "Search For";
+$vocab["search_for"]         = "Search for";
 $vocab["from"]               = "From";
 
 // Used in report.php
@@ -327,19 +345,6 @@ $vocab["delete_entries_warning"] = "WARNING!  This will delete all the entries m
                                    "Total number of entries that will be deleted: ";
 $vocab["delete_entries_failed"] = "The entries could not be deleted.";
 
-// Used in week.php
-$vocab["weekbefore"]         = "Go To Week Before";
-$vocab["weekafter"]          = "Go To Week After";
-$vocab["gotothisweek"]       = "Go To This Week";
-
-// Used in month.php
-$vocab["monthbefore"]        = "Go To Month Before";
-$vocab["monthafter"]         = "Go To Month After";
-$vocab["gotothismonth"]      = "Go To This Month";
-
-// Used in {day week month}.php
-$vocab["no_rooms_for_area"]  = "No rooms defined for this area";
-
 // Used in admin.php
 $vocab["edit"]               = "Edit";
 $vocab["delete"]             = "Delete";
@@ -378,7 +383,6 @@ $vocab["invalid_room_name"]       = "This room name has already been used in the
 $vocab["invalid_email"]           = "Invalid email address!";
 $vocab["invalid_time_format"]     = "Times must be in the format 'hh:mm'";
 $vocab["invalid_resolution"]      = "Invalid combination of first slot, last slot and resolution!";
-$vocab["too_many_slots"]          = 'You need to increase the value of $max_slots in the config file!';
 $vocab["general_settings"]        = "General";
 $vocab["time_settings"]           = "Slot times";
 $vocab["period_settings"]         = "Period names";
@@ -451,16 +455,19 @@ $vocab["NO"]                 = "NO";
 $vocab["delarea"]            = "You must delete all rooms in this area before you can delete it<p>";
 
 // Used in help.php
-$vocab["about_mrbs"]         = "About MRBS";
-$vocab["mrbs_version"]       = "MRBS version";
-$vocab["config_details"]     = "Configuration details";
-$vocab["server_details"]     = "Server details";
-$vocab["database"]           = "Database";
-$vocab["system"]             = "System";
-$vocab["servertime"]         = "Server time";
-$vocab["server_software"]    = "Server software";
-$vocab["please_contact"]     = "Please contact ";
-$vocab["for_any_questions"]  = "for any questions that aren't answered here.";
+$vocab["about_mrbs"]              = "About MRBS";
+$vocab["mrbs_version"]            = "MRBS version";
+$vocab["db_schema_version"]       = "Database schema version";
+$vocab["db_local_schema_version"] = "Database local schema version";
+$vocab["config_details"]          = "Configuration details";
+$vocab["server_details"]          = "Server details";
+$vocab["database"]                = "Database";
+$vocab["system"]                  = "System";
+$vocab["servertime"]              = "Server time";
+$vocab["server_software"]         = "Server software";
+$vocab["extensions"]              = "Extensions";
+$vocab["please_contact"]          = "Please contact ";
+$vocab["for_any_questions"]       = "for any questions that aren't answered here.";
 
 // Used in import.php
 $vocab["import_icalendar"]            = "Import an iCalendar file";
@@ -509,21 +516,26 @@ $vocab["invalid_RRULE"]               = "Invalid RRULE: missing FREQ part";
 $vocab["more_than_one_BYDAY"]         = "MRBS does not support more than one BYDAY value when FREQ=";
 $vocab["BYDAY_equals_5"]              = "MRBS does not support a BYDAY value of 5";
 $vocab["unsupported_FREQ"]            = "MRBS does not support FREQ=";
-$vocab["unsupported_INTERVAL"]        = "MRBS does not support INTERVAL>1 with FREQ=";
 $vocab["unsupported_COUNT"]           = "COUNT not yet supported by MRBS";
 $vocab["no_indefinite_repeats"]       = "Indefinite repeats not yet supported by MRBS";
 $vocab["events_imported"]             = "events imported";
 $vocab["events_not_imported"]         = "events not imported";
 
 // Used in DataTables
+$vocab["dt_all"]             = "All";
 $vocab["show_hide_columns"]  = "Show / hide columns";
+$vocab["copy"]               = "Copy";
+// "csv" already defined above
+$vocab["excel"]              = "Excel";
+$vocab["pdf"]                = "PDF";
+$vocab["print"]              = "Print";
 $vocab["restore_original"]   = "Restore original";
 
 // Entry types
 $vocab["type."]             = "Please select a type";
 $vocab["type.I"]            = "Internal";
 $vocab["type.E"]            = "External";
- 
+
 // General
 $vocab["fatal_error"]        = "Whoops!  Unfortunately MRBS has encountered a fatal error.  Please consult your system administrator.";
 $vocab["fatal_db_error"]     = "Fatal error: unfortunately the database is not available at the moment.";

@@ -19,7 +19,7 @@ $vocab["admin"]              = "관리자";
 $vocab["help"]               = "도움말";
 $vocab["search"]             = "검색";
 
-// Used in day.php
+// Used in index.php
 $vocab["bookingsfor"]        = "Bookings for";
 $vocab["bookingsforpost"]    = "의 예약입니다.";
 $vocab["areas"]              = "지역";
@@ -27,8 +27,18 @@ $vocab["daybefore"]          = "이전으로";
 $vocab["dayafter"]           = "다음으로";
 $vocab["gototoday"]          = "오늘의 예약";
 $vocab["goto"]               = "바로가기";
+$vocab["nav_day"]            = "Day";
+$vocab["nav_week"]           = "Week";
+$vocab["nav_month"]          = "Month";
 $vocab["highlight_line"]     = "Highlight this line";
 $vocab["click_to_reserve"]   = "Click on the cell to make a reservation.";
+$vocab["weekbefore"]         = "저번 주로";
+$vocab["weekafter"]          = "다음 주로";
+$vocab["gotothisweek"]       = "이번 주로";
+$vocab["monthbefore"]        = "저번 달로";
+$vocab["monthafter"]         = "다음 달로";
+$vocab["gotothismonth"]      = "이번 달로";
+$vocab["no_rooms_for_area"]  = "등록된 회의실이 없습니다.";
 
 // Used in trailer.inc
 $vocab["viewday"]            = "일 단위";
@@ -66,14 +76,10 @@ $vocab["rep_type_3"]         = "월간";
 $vocab["rep_type_4"]         = "연간";
 $vocab["rep_end_date"]       = "반복 종료일";
 $vocab["rep_rep_day"]        = "반복일";
-$vocab["rep_freq"]           = "빈도";
-$vocab["rep_num_weeks"]      = "몇 주";
 $vocab["ctrl_click"]         = "2개 이상을 선택하기 위해서는 Control-Click을 사용하세요";
 $vocab["entryid"]            = "엔트리 ID ";
 $vocab["repeat_id"]          = "반복 ID "; 
-$vocab["you_have_not_entered"] = "You have not entered a";
 $vocab["brief_description"]  = "간략 설명";
-$vocab["useful_n-weekly_value"] = "useful n-weekly value.";
 
 // Used in view_entry.php
 $vocab["description"]        = "설명";
@@ -134,7 +140,6 @@ $vocab["of"]                 = " of ";
 $vocab["previous"]           = "이전";
 $vocab["next"]               = "이후";
 $vocab["entry"]              = "Entry";
-$vocab["advanced_search"]    = "상세 검색";
 $vocab["search_button"]      = "검색";
 $vocab["search_for"]         = "Search For";
 $vocab["from"]               = "From";
@@ -161,19 +166,6 @@ $vocab["total"]              = "전체";
 $vocab["submitquery"]        = "보고서 실행";
 $vocab["sort_rep"]           = "정렬 순서";
 $vocab["sort_rep_time"]      = "시작 일/시간";
-
-// Used in week.php
-$vocab["weekbefore"]         = "저번 주로";
-$vocab["weekafter"]          = "다음 주로";
-$vocab["gotothisweek"]       = "이번 주로";
-
-// Used in month.php
-$vocab["monthbefore"]        = "저번 달로";
-$vocab["monthafter"]         = "다음 달로";
-$vocab["gotothismonth"]      = "이번 달로";
-
-// Used in {day week month}.php
-$vocab["no_rooms_for_area"]  = "등록된 회의실이 없습니다.";
 
 // Used in admin.php
 $vocab["edit"]               = "수정";

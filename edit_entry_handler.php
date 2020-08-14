@@ -1,26 +1,30 @@
 <?php
 namespace MRBS;
 
-require "defaultincludes.inc";
-require_once "mrbs_sql.inc";
-require_once "functions_ical.inc";
+require 'defaultincludes.inc';
+require_once 'mrbs_sql.inc';
+require_once 'functions_ical.inc';
+require_once 'functions_mail.inc';
 
 use MRBS\Form\Form;
 use MRBS\Form\ElementInputSubmit;
 
+
 function invalid_booking($message)
 {
-  global $day, $month, $year, $area, $room;
-  
-  print_header($day, $month, $year, $area, isset($room) ? $room : null);
+  global $view, $view_all, $year, $month, $day, $area, $room;
+
+  print_header($view, $view_all, $year, $month, $day, $area, isset($room) ? $room : null);
   echo "<h1>" . get_vocab('invalid_booking') . "</h1>\n";
   echo "<p>$message</p>\n";
   // Print footer and exit
   print_footer(true);
 }
 
-$ajax = get_form_var('ajax', 'int');
-if ($ajax && !checkAuthorised(true))
+
+$is_ajax = is_ajax();
+
+if ($is_ajax && !checkAuthorised(this_page(), true))
 {
   exit;
 }
@@ -32,12 +36,9 @@ Form::checkToken();
 
 // (1) Check the user is authorised for this page
 //  ---------------------------------------------
-checkAuthorised();
+checkAuthorised(this_page());
 
-// Also need to know whether they have admin rights
-$user = getUserName();
-$is_admin = (authGetUserLevel($user) >= 2);
-
+$current_username = getUserName();
 
 
 // (2) Get the form variables
@@ -60,54 +61,78 @@ $is_admin = (authGetUserLevel($user) >= 2);
 // the validity of a proposed booking and does not make the booking.
 
 // Get non-standard form variables
-$formvars = array('create_by'          => 'string',
-                  'name'               => 'string',
-                  'description'        => 'string',
-                  'start_seconds'      => 'int',
-                  'start_date'         => 'string',
-                  'end_seconds'        => 'int',
-                  'end_date'           => 'string',
-                  'all_day'            => 'string',  // bool, actually
-                  'type'               => 'string',
-                  'rooms'              => 'array',
-                  'original_room_id'   => 'int',
-                  'ical_uid'           => 'string',
-                  'ical_sequence'      => 'int',
-                  'ical_recur_id'      => 'string',
-                  'returl'             => 'string',
-                  'id'                 => 'int',
-                  'rep_id'             => 'int',
-                  'edit_type'          => 'string',
-                  'rep_type'           => 'int',
-                  'rep_end_date'       => 'string',
-                  'rep_id'             => 'int',
-                  'rep_day'            => 'array',   // array of bools
-                  'rep_num_weeks'      => 'int',
-                  'month_type'         => 'int',
-                  'month_absolute'     => 'int',
-                  'month_relative_ord' => 'string',
-                  'month_relative_day' => 'string',
-                  'skip'               => 'string',  // bool, actually
-                  'no_mail'            => 'string',  // bool, actually
-                  'private'            => 'string',  // bool, actually
-                  'confirmed'          => 'string',
-                  'back_button'        => 'string',
-                  'timetohighlight'    => 'int',
-                  'page'               => 'string',
-                  'commit'             => 'string');
-      
-foreach($formvars as $var => $var_type)
+$form_vars = array(
+  'create_by'          => 'string',
+  'name'               => 'string',
+  'description'        => 'string',
+  'start_seconds'      => 'int',
+  'start_date'         => 'string',
+  'end_seconds'        => 'int',
+  'end_date'           => 'string',
+  'all_day'            => 'string',  // bool, actually
+  'type'               => 'string',
+  'rooms'              => 'array',
+  'original_room_id'   => 'int',
+  'ical_uid'           => 'string',
+  'ical_sequence'      => 'int',
+  'ical_recur_id'      => 'string',
+  'returl'             => 'string',
+  'id'                 => 'int',
+  'rep_id'             => 'int',
+  'edit_type'          => 'string',
+  'rep_type'           => 'int',
+  'rep_end_date'       => 'string',
+  'rep_day'            => 'array',   // array of bools
+  'rep_interval'       => 'int',
+  'month_type'         => 'int',
+  'month_absolute'     => 'int',
+  'month_relative_ord' => 'string',
+  'month_relative_day' => 'string',
+  'skip'               => 'string',  // bool, actually
+  'no_mail'            => 'string',  // bool, actually
+  'private'            => 'string',  // bool, actually
+  'confirmed'          => 'string',
+  'back_button'        => 'string',
+  'timetohighlight'    => 'int',
+  'commit'             => 'string'
+);
+
+foreach($form_vars as $var => $var_type)
 {
   $$var = get_form_var($var, $var_type);
-  // Trim the strings
+
+  // Trim the strings and truncate them to the maximum field length
   if (is_string($$var))
   {
     $$var = trim($$var);
+    $$var = truncate($$var, "entry.$var");
   }
+
+}
+
+// Validate the create_by variable, checking that it's the current user, unless the
+// user is an admin and we allow admins to make bookings on behalf of others.
+if (!$is_ajax &&
+    (!is_book_admin($rooms) || $auth['admin_can_only_book_for_self']))
+{
+  if ($create_by !== $current_username)
+  {
+    $message = "Attempt made by user '$current_username' to make a booking in the name of '$create_by'";
+    trigger_error($message, E_USER_NOTICE);
+    $create_by = $current_username;
+  }
+}
+
+// If they're not an admin and multi-day bookings are not allowed, then
+// set the end date to the start date
+if (!is_book_admin($rooms) && $auth['only_admin_can_book_multiday'])
+{
+  $end_date = $start_date;
 }
 
 list($start_year, $start_month, $start_day) = split_iso_date($start_date);
 list($end_year, $end_month, $end_day) = split_iso_date($end_date);
+
 if (isset($rep_end_date))
 {
   list($rep_end_year, $rep_end_month, $rep_end_day) = split_iso_date($rep_end_date);
@@ -129,7 +154,7 @@ $custom_fields = array();
 
 // Get the information about the fields in the entry table
 $fields = db()->field_info($tbl_entry);
-          
+
 foreach($fields as $field)
 {
   if (!in_array($field['name'], $standard_fields['entry']))
@@ -143,15 +168,18 @@ foreach($fields as $field)
         // Smallints and tinyints are considered to be booleans
         $f_type = (isset($field['length']) && ($field['length'] <= 2)) ? 'string' : 'int';
         break;
+      case 'decimal':
+        $f_type = 'decimal';
+        break;
       // We can only really deal with the types above at the moment
       default:
         $f_type = 'string';
         break;
     }
-    
+
     $var = VAR_PREFIX . $field['name'];
     $custom_fields[$field['name']] = get_form_var($var, $f_type);
-    
+
     if (($f_type == 'int') && ($custom_fields[$field['name']] === ''))
     {
       $custom_fields[$field['name']] = null;
@@ -163,11 +191,14 @@ foreach($fields as $field)
     {
       $custom_fields[$field['name']] = ($custom_fields[$field['name']]) ? true : false;
     }
-    // Trim any strings
-    if (is_string($custom_fields[$field['name']]))
+
+    // Trim any strings and truncate them to the maximum field length
+    if (is_string($custom_fields[$field['name']]) && ($field['nature'] != 'decimal'))
     {
       $custom_fields[$field['name']] = trim($custom_fields[$field['name']]);
+      $custom_fields[$field['name']] = truncate($custom_fields[$field['name']], 'entry.' . $field['name']);
     }
+
   }
 }
 
@@ -176,24 +207,38 @@ foreach($fields as $field)
 // -------------------------------
 
 // Form validation checks.   Normally checked for client side.
-// Don't bother with them if this is an Ajax request.
-if (!$ajax)
+
+if (empty($rooms))
+{
+  if (!$is_ajax)
+  {
+    invalid_booking(get_vocab('no_rooms_selected'));
+  }
+  if ($commit)
+  {
+    throw new \Exception('No rooms specified');
+  }
+  // If this is an Ajax request and we're not committing the booking, ie we are just
+  // checking for conflicts, then it's perfectly possible to get here without any rooms
+  // being selected on the form (just deselect the room on the form with Ctrl Click).  So
+  // in this case just return a null response.
+  http_headers(array("Content-Type: application/json"));
+  echo json_encode(null);
+  exit;
+}
+
+// Don't bother with these checks if this is an Ajax request.
+if (!$is_ajax)
 {
   if (!isset($name) || ($name === ''))
   {
     invalid_booking(get_vocab('must_set_description'));
-  }       
-
-  if (empty($rooms))
-  {
-    invalid_booking(get_vocab('no_rooms_selected'));
   }
 
-  if (($rep_type == REP_WEEKLY) && ($rep_num_weeks < 1))
+  if (($rep_type != REP_NONE) && ($rep_interval < 1))
   {
-    invalid_booking(get_vocab('you_have_not_entered') . " " . get_vocab("useful_n-weekly_value"));
+    invalid_booking(get_vocab('invalid_rep_interval'));
   }
-  
 
   if (count($is_mandatory_field))
   {
@@ -210,7 +255,7 @@ if (!$ajax)
         }
       }
     }
-  }        
+  }
 }
 
 if (!isset($type))
@@ -225,7 +270,7 @@ if (isset($month_relative_ord) && isset($month_relative_day))
 
 // Handle private booking
 // Enforce config file settings if needed
-if ($private_mandatory) 
+if ($private_mandatory)
 {
   $isprivate = $private_default;
 }
@@ -242,37 +287,21 @@ if (isset($id) && ($id == ''))
   unset($id);
 }
 
+// Make sure the area corresponds to the room that is being booked
+$area = get_area($rooms[0]);
+get_area_settings($area);  // Update the area settings
 
-if (empty($rooms))
-{
-  trigger_error('Internal error: no rooms specified', E_USER_WARNING);
-}
-else
-{
-  // Make sure the area corresponds to the room that is being booked
-  $area = get_area($rooms[0]);
-  get_area_settings($area);  // Update the area settings
-}
 // and that $room is in $area
 if (get_area($room) != $area)
 {
   $room = get_default_room($area);
 }
 
-// If they're not an admin and multi-day bookings are not allowed, then
-// set the end date to the start date
-if (!$is_admin && $auth['only_admin_can_book_multiday'])
-{
-  $end_day = $start_day;
-  $end_month = $start_month;
-  $end_year = $start_year;
-}
-
 // Check that they really are allowed to set $no_mail;
 if ($no_mail)
 {
   if (!$mail_settings['allow_no_mail'] &&
-      (!$is_admin || !$mail_settings['allow_admins_no_mail']))
+      (!is_book_admin($rooms) || !$mail_settings['allow_admins_no_mail']))
   {
     $no_mail = false;
   }
@@ -281,13 +310,13 @@ if ($no_mail)
 // If this is an Ajax request and we're being asked to commit the booking, then
 // we'll only have been supplied with parameters that need to be changed.  Fill in
 // the rest from the existing boking information.
-// Note: we assume that 
+// Note: we assume that
 // (1) this is not a series (we can't cope with them yet)
 // (2) we always get passed start_seconds and end_seconds in the Ajax data
-if ($ajax && $commit)
+if ($is_ajax && $commit)
 {
   $old_booking = get_booking_info($id, false);
-  foreach ($formvars as $var => $var_type)
+  foreach ($form_vars as $var => $var_type)
   {
     if (!isset($$var) || (($var_type == 'array') && empty($$var)))
     {
@@ -355,38 +384,6 @@ if ($ajax && $commit)
 }
 
 
-// Truncate any fields that have a maximum length as a precaution.
-// Although the MAXLENGTH attribute is used in the <input> tag, this can
-// sometimes be ignored by the browser, for example by Firefox when 
-// autocompletion is used.  The user could also edit the HTML and remove
-// the MAXLENGTH attribute.    Another problem is that the <datalist> tag
-// does not accept a maxlength attribute.  Passing an oversize string to some
-// databases (eg some versions of PostgreSQL) results in an SQL error,
-// rather than silent truncation of the string.
-//
-// We truncate to a maximum number of UTF8 characters rather than bytes.
-// This is OK in current versions of MySQL and PostgreSQL, though in earler
-// versions of MySQL (I haven't checked PostgreSQL) this could cause problems
-// as a VARCHAR(n) was n bytes long rather than n characters.
-foreach ($maxlength as $key => $length)
-{
-  list($table, $field) = explode('.', $key, 2);
-  if ($table == 'entry')
-  {
-    // Custom fields are held in their own array, so we need to handle them
-    // slightly differently. (Should probably change the way they are handled
-    // sometime to be just like any other variables).
-    if (array_key_exists($field, $custom_fields))
-    {
-      $custom_fields[$field] = utf8_substr($custom_fields[$field], 0, $length);
-    }
-    elseif (isset($$field))
-    {
-      $$field = utf8_substr($$field, 0, $length);
-    }
-  }
-}
-
 // When All Day is checked, $start_seconds and $end_seconds are disabled and so won't
 // get passed through by the form.   We therefore need to set them.
 if (!empty($all_day))
@@ -426,6 +423,7 @@ if (day_past_midnight())
   }
 }
 
+$target_rooms = $rooms;
 
 // Check that the user has permission to create/edit an entry for this room.
 // Get the id of the room that we are creating/editing
@@ -433,8 +431,8 @@ if (isset($id))
 {
   // Editing an existing booking: get the room_id from the database (you can't
   // get it from $rooms because they are the new rooms)
-  $target_room = db()->query1("SELECT room_id FROM $tbl_entry WHERE id=? LIMIT 1", array($id));
-  if ($target_room < 0)
+  $existing_room = db()->query1("SELECT room_id FROM $tbl_entry WHERE id=? LIMIT 1", array($id));
+  if ($existing_room < 0)
   {
     // Ideally we should give more feedback to the user when this happens, or
     // even lock the entry once a user starts to edit it.
@@ -444,25 +442,14 @@ if (isset($id))
     header("Location: $returl");
     exit;
   }
+  $target_rooms[] = $existing_room;
+  $target_rooms = array_unique($target_rooms);
 }
-else
+
+// Must have write access to at least one of the rooms
+if (!getWritable($create_by, $target_rooms, false))
 {
-  // New booking: get the room_id from the form
-  if (!isset($rooms[0]))
-  {
-    // $rooms[0] should always be set, because you can only get here
-    // from edit_entry.php, where it will be set.   If it's not set
-    // then something's gone wrong - probably somebody trying to call
-    // edit_entry_handler.php directly from the browser - so get out 
-    // of here and go somewhere safe.
-    header("Location: index.php");
-    exit;
-  }
-  $target_room = $rooms[0];
-}
-if (!getWritable($create_by, $user, $target_room))
-{
-  showAccessDenied($day, $month, $year, $area, isset($room) ? $room : null);
+  showAccessDenied($view, $view_all, $year, $month, $day, $area, isset($room) ? $room : null);
   exit;
 }
 
@@ -485,9 +472,9 @@ if ($enable_periods)
 }
 
 // Round down the starttime and round up the endtime to the nearest slot boundaries
-// (This step is probably unnecesary now that MRBS always returns times aligned
+// (This step is probably unnecessary now that MRBS always returns times aligned
 // on slot boundaries, but is left in for good measure).
-$am7 = get_start_first_slot($start_month, $start_day, $start_year);                 
+$am7 = get_start_first_slot($start_month, $start_day, $start_year);
 $start_time = round_t_down($start_time, $resolution, $am7);
 $end_time = round_t_up($end_time, $resolution, $am7);
 
@@ -533,12 +520,12 @@ if (isset($rep_type) && ($rep_type != REP_NONE))
       $rep_day[] = date('w', $start_time);
     }
     // Build string of weekdays to repeat on:
-    for ($i = 0; $i < 7; $i++)
+    for ($i = 0; $i < DAYS_PER_WEEK; $i++)
     {
       $rep_opt .= in_array($i, $rep_day) ? "1" : "0";  // $rep_opt is a string
     }
   }
-  
+
   // Make sure that the starttime coincides with a repeat day.  In
   // other words make sure that the first starttime defines an actual
   // entry.   We need to do this because if we are going to construct an iCalendar
@@ -546,10 +533,11 @@ if (isset($rep_type) && ($rep_type != REP_NONE))
   // a series.  ["The "DTSTART" property for a "VEVENT" specifies the inclusive
   // start of the event.  For recurring events, it also specifies the very first
   // instance in the recurrence set."]
-  
-  $rep_details = array('rep_type'      => $rep_type,
-                       'rep_opt'       => $rep_opt,
-                       'rep_num_weeks' => $rep_num_weeks);
+
+  $rep_details = array('rep_type'       => $rep_type,
+                       'rep_opt'        => $rep_opt,
+                       'rep_interval'   => $rep_interval);
+
   if (isset($month_type))
   {
     if ($month_type == REP_MONTH_ABSOLUTE)
@@ -577,10 +565,9 @@ if (isset($rep_type) && ($rep_type != REP_NONE))
   }
 }
 
-
 // If we're committing this booking, get the start day/month/year and
 // make them the current day/month/year
-if (!$ajax || $commit)
+if (!$is_ajax || $commit)
 {
   $day = $start_day;
   $month = $start_month;
@@ -588,7 +575,7 @@ if (!$ajax || $commit)
 }
 
 // Set up the return URL.    As the user has tried to book a particular room and a particular
-// day, we must consider these to be the new "sticky room" and "sticky day", so modify the 
+// day, we must consider these to be the new "sticky room" and "sticky day", so modify the
 // return URL accordingly.
 
 // First get the return URL basename, having stripped off the old query string
@@ -599,31 +586,25 @@ if (!$ajax || $commit)
 //       have to preserve the search parameter in the query string)
 if (isset($returl) && ($returl !== ''))
 {
-  $returl = parse_url($returl, PHP_URL_PATH);
+  $returl = parse_url($returl);
   if ($returl !== false)
   {
-    $returl = explode('/', $returl);
+    if (isset($returl['query']))
+    {
+      parse_str($returl['query'], $query_vars);
+    }
+    $view = (isset($query_vars['view'])) ? $query_vars['view'] : $default_view;
+    $returl = explode('/', $returl['path']);
     $returl = end($returl);
   }
 }
 
-if (empty($returl) || 
+if (empty($returl) ||
     in_array($returl, array('edit_entry.php',
                             'edit_entry_handler.php',
                             'search.php')))
 {
-  switch ($default_view)
-  {
-    case 'month':
-      $returl = 'month.php';
-      break;
-    case 'week':
-      $returl = 'week.php';
-      break;
-    default:
-      $returl = 'day.php';
-      break;
-  }
+  $returl = 'index.php';
 }
 
 // If we haven't been given a sensible date then get out of here and don't try and make a booking
@@ -633,30 +614,35 @@ if (!isset($start_day) || !isset($start_month) || !isset($start_year) || !checkd
   exit;
 }
 
-// Now construct the new query string
-$returl .= "?year=$year&month=$month&day=$day";
-
 // If the old sticky room is one of the rooms requested for booking, then don't change the sticky room.
 // Otherwise change the sticky room to be one of the new rooms.
 if (!in_array($room, $rooms))
 {
   $room = $rooms[0];
-} 
+}
 // Find the corresponding area
 $area = mrbsGetRoomArea($room);
-// Complete the query string
-$returl .= "&area=$area&room=$room";
+
+// Now construct the new query string
+$vars = array('view'  => (isset($view)) ? $view : $default_view,
+              'year'  => $year,
+              'month' => $month,
+              'day'   => $day,
+              'area'  => $area,
+              'room'  => $room);
+
+$returl .= '?' . http_build_query($vars, '', '&');
 
 
 // Check to see whether this is a repeat booking and if so, whether the user
 // is allowed to make/edit repeat bookings.   (The edit_entry form should
-// prevent you ever getting here, but this check is here as a safeguard in 
+// prevent you ever getting here, but this check is here as a safeguard in
 // case someone has spoofed the HTML)
 if (isset($rep_type) && ($rep_type != REP_NONE) &&
-    !$is_admin &&
+    !is_book_admin($rooms) &&
     !empty($auth['only_admin_can_book_repeat']))
 {
-  showAccessDenied($day, $month, $year, $area, isset($room) ? $room : null);
+  showAccessDenied($view, $view_all, $year, $month, $day, $area, isset($room) ? $room : null);
   exit;
 }
 
@@ -668,9 +654,15 @@ if (isset($rep_type) && ($rep_type != REP_NONE) &&
 $bookings = array();
 foreach ($rooms as $room_id)
 {
+  // Ignore rooms for which the user doesn't have write access
+  if (!getWritable($create_by, $room_id))
+  {
+    continue;
+  }
+
   $booking = array();
   $booking['create_by'] = $create_by;
-  $booking['modified_by'] = (isset($id)) ? $user : '';
+  $booking['modified_by'] = (isset($id)) ? $current_username : '';
   $booking['name'] = $name;
   $booking['type'] = $type;
   $booking['description'] = $description;
@@ -679,7 +671,7 @@ foreach ($rooms as $room_id)
   $booking['end_time'] = $end_time;
   $booking['rep_type'] = $rep_type;
   $booking['rep_opt'] = $rep_opt;
-  $booking['rep_num_weeks'] = $rep_num_weeks;
+  $booking['rep_interval'] = $rep_interval;
   $booking['end_date'] = $rep_end_time;
   $booking['ical_uid'] = $ical_uid;
   $booking['ical_sequence'] = $ical_sequence;
@@ -704,26 +696,26 @@ foreach ($rooms as $room_id)
 
   // Set the various statuses as appropriate
   // (Note: the statuses fields are the only ones that can differ by room)
-  
+
   // Privacy status
   $booking['private'] = (bool) $isprivate;
-  
+
   // If we are using booking approvals then we need to work out whether the
   // status of this booking is approved.   If the user is allowed to approve
   // bookings for this room, then the status will be approved, since they are
   // in effect immediately approving their own booking.  Otherwise the booking
   // will need to approved.
-  $booking['awaiting_approval'] = ($approval_enabled && !auth_book_admin($user, $room_id));
-  
+  $booking['awaiting_approval'] = ($approval_enabled && !is_book_admin($room_id));
+
   // Confirmation status
   $booking['tentative'] = ($confirmation_enabled && !$confirmed);
-  
+
   $bookings[] = $booking;
 }
 
-$just_check = $ajax && !$commit;
+$just_check = $is_ajax && !$commit;
 $this_id = (isset($id)) ? $id : null;
-$send_mail = ($no_mail) ? false : $need_to_send_mail;
+$send_mail = ($no_mail) ? FALSE : need_to_send_mail();
 
 // Wrap the editing process in a transaction, because if deleting the old booking should fail for
 // some reason then we'll potentially be left with two overlapping bookings.  A deletion could fail
@@ -736,16 +728,16 @@ if (!db()->mutex_lock($tbl_entry))
 }
 
 db()->begin();
-  
+
 $transaction_ok = true;
 
 $result = mrbsMakeBookings($bookings, $this_id, $just_check, $skip, $original_room_id, $send_mail, $edit_type);
 
-// If we weren't just checking and this was a succesful booking and
+// If we weren't just checking and this was a successful booking and
 // we were editing an existing booking, then delete the old booking
 if (!$just_check && $result['valid_booking'] && isset($id))
 {
-  $transaction_ok = mrbsDelEntry($user, $id, ($edit_type == "series"), 1);
+  $transaction_ok = mrbsDelEntry($id, ($edit_type == "series"), 1);
 }
 
 if ($transaction_ok)
@@ -762,20 +754,25 @@ db()->mutex_unlock($tbl_entry);
 
 
 // If this is an Ajax request, output the result and finish
-if ($ajax)
+if ($is_ajax)
 {
-  // If this was a successful commit generate the new HTML
-  if ($result['valid_booking'] && $commit)
+  // Generate the new HTML
+  if ($commit)
   {
     // Generate the new HTML
     require_once "functions_table.inc";
-    if ($page == 'day')
+
+    switch ($view)
     {
-      $result['table_innerhtml'] = day_table_innerhtml($day, $month, $year, $room, $area, $timetohighlight);
-    }
-    else
-    {
-      $result['table_innerhtml'] = week_table_innerhtml($day, $month, $year, $room, $area, $timetohighlight);
+      case 'day':
+        $result['table_innerhtml'] = day_table_innerhtml($view, $year, $month, $day, $area, $room, $timetohighlight);
+        break;
+      case 'week':
+        $result['table_innerhtml'] = week_table_innerhtml($view, $view_all, $year, $month, $day, $area, $room, $timetohighlight);
+        break;
+      default:
+        throw new \Exception("Unsupported view '$view'");
+        break;
     }
   }
   http_headers(array("Content-Type: application/json"));
@@ -792,8 +789,8 @@ if ($result['valid_booking'])
 
 else
 {
-  print_header($day, $month, $year, $area, isset($room) ? $room : null);
-    
+  print_header($view, $view_all, $year, $month, $day, $area, isset($room) ? $room : null);
+
   echo "<h2>" . get_vocab("sched_conflict") . "</h2>\n";
   if (!empty($result['violations']['errors']))
   {
@@ -828,11 +825,11 @@ $form = new Form();
 
 $form->setAttributes(array('method' => 'post',
                            'action' => $returl));
-                           
-$submit = new ElementInputSubmit(); 
+
+$submit = new ElementInputSubmit();
 $submit->setAttribute('value', get_vocab('back'));
 $form->addElement($submit);
-                 
+
 $form->render();
 
 
@@ -842,14 +839,14 @@ if (empty($result['violations']['errors'])  &&
     isset($rep_type) && ($rep_type != REP_NONE))
 {
   $form = new Form();
-  
+
   $form->setAttributes(array('method' => 'post',
                              'action' => this_page()));
-                             
+
   // Put the booking data in as hidden inputs
   $skip = 1;  // Force a skip next time round
   // First the ordinary fields
-  foreach ($formvars as $var => $var_type)
+  foreach ($form_vars as $var => $var_type)
   {
     if ($var_type == 'array')
     {
@@ -879,13 +876,12 @@ if (empty($result['violations']['errors'])  &&
   $submit = new ElementInputSubmit();
   $submit->setAttributes(array('value' => get_vocab('skip_and_book'),
                                'title' => get_vocab('skip_and_book_note')));
-  
+
   $form->addElement($submit);
-  
+
   $form->render();
 }
 
 echo "</div>\n";
 
-output_trailer();
-
+print_footer();

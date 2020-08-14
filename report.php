@@ -3,6 +3,7 @@ namespace MRBS;
 
 use MRBS\Form\Form;
 use MRBS\Form\ElementFieldset;
+use MRBS\Form\ElementInputHidden;
 use MRBS\Form\FieldDiv;
 use MRBS\Form\FieldInputDatalist;
 use MRBS\Form\FieldInputDate;
@@ -42,7 +43,7 @@ function get_field_to_date($data)
 
 
 function get_field_areamatch($data)
-{        
+{
   $field = new FieldInputDatalist();
   $options = get_area_names($all=true);
   $field->setAttribute('id', 'div_areamatch')
@@ -50,7 +51,7 @@ function get_field_areamatch($data)
         ->setControlAttributes(array('name'  => 'areamatch',
                                      'value' => $data['areamatch']))
         ->addDatalistOptions($options, false);
-        
+
   return $field;
 }
 
@@ -58,19 +59,30 @@ function get_field_areamatch($data)
 function get_field_roommatch($data)
 {
   global $tbl_room;
-  
+
   $field = new FieldInputDatalist();
-  
+
   // (We need DISTINCT because it's possible to have two rooms of the same name
   // in different areas)
-  $options = db()->query_array("SELECT DISTINCT room_name FROM $tbl_room ORDER BY room_name");
-  
+  $sql = "SELECT DISTINCT room_name FROM $tbl_room";
+
+  // Don't show the invisible rooms
+  $invisible_room_ids = get_invisible_room_ids();
+  if (count($invisible_room_ids) > 0)
+  {
+    $sql .= " WHERE id NOT IN (" . implode(',', $invisible_room_ids) . ")";
+  }
+
+  $sql .=  " ORDER BY room_name";
+
+  $options = db()->query_array($sql);
+
   $field->setAttribute('id', 'div_roommatch')
         ->setLabel(get_vocab('match_room'))
         ->setControlAttributes(array('name'  => 'roommatch',
                                      'value' => $data['roommatch']))
         ->addDatalistOptions($options, false);
-        
+
   return $field;
 }
 
@@ -78,18 +90,18 @@ function get_field_roommatch($data)
 function get_field_typematch($data)
 {
   global $booking_types;
-  
-  if (count($booking_types) <=1)
+
+  if (!isset($booking_types) || (count($booking_types) < 2))
   {
     return null;
   }
-  
+
   $options = array();
   foreach ($booking_types as $type)
   {
     $options[$type] = get_type_vocab($type);
   }
-  
+
   $field = new FieldSelect();
   $field->setAttributes(array('id'    => 'div_typematch',
                               'class' => 'multiline'))
@@ -100,7 +112,7 @@ function get_field_typematch($data)
                                      'multiple' => true,
                                      'size'     => '5'))
         ->addSelectOptions($options, $data['typematch'], true);
-  
+
   return $field;
 }
 
@@ -108,13 +120,13 @@ function get_field_typematch($data)
 function get_field_match_private($data)
 {
   global $user_level, $private_somewhere;
-  
+
   // Only show this part of the form if there are areas that allow private bookings
   if (!$private_somewhere)
   {
     return null;
   }
-  
+
   // If they're not logged in then there's no point in showing this part of the form because
   // they'll only be able to see public bookings anyway (and we don't want to alert them to
   // the existence of private bookings)
@@ -134,7 +146,7 @@ function get_field_match_private($data)
           ->setLabel(get_vocab('privacy_status'))
           ->addRadioOptions($options, 'match_private', $data['match_private'], true);
   }
-  
+
   return $field;
 }
 
@@ -142,13 +154,13 @@ function get_field_match_private($data)
 function get_field_match_confirmed($data)
 {
   global $confirmation_somewhere;
-  
+
   // Only show this part of the form if there are areas that allow tentative bookings
   if (!$confirmation_somewhere)
   {
     return null;
   }
-  
+
   $options = array(BOOLEAN_MATCH_BOTH  => get_vocab('both'),
                    BOOLEAN_MATCH_TRUE  => get_vocab('confirmed'),
                    BOOLEAN_MATCH_FALSE => get_vocab('tentative'));
@@ -156,7 +168,7 @@ function get_field_match_confirmed($data)
   $field->setAttribute('id', 'div_confirmationstatus')
         ->setLabel(get_vocab('confirmation_status'))
         ->addRadioOptions($options, 'match_confirmed', $data['match_confirmed'], true);
-  
+
   return $field;
 }
 
@@ -164,13 +176,13 @@ function get_field_match_confirmed($data)
 function get_field_match_approved($data)
 {
   global $approval_somewhere;
-  
+
   // Only show this part of the form if there are areas that require approval
   if (!$approval_somewhere)
   {
     return null;
   }
-  
+
   $options = array(BOOLEAN_MATCH_BOTH  => get_vocab('both'),
                    BOOLEAN_MATCH_TRUE  => get_vocab('approved'),
                    BOOLEAN_MATCH_FALSE => get_vocab('awaiting_approval'));
@@ -178,7 +190,7 @@ function get_field_match_approved($data)
   $field->setAttribute('id', 'div_approvalstatus')
         ->setLabel(get_vocab('approval_status'))
         ->addRadioOptions($options, 'match_approved', $data['match_approved'], true);
-  
+
   return $field;
 }
 
@@ -187,16 +199,16 @@ function get_field_custom($data, $key)
 {
   $var = "match_$key";
   global $$var;
-  
+
   global $tbl_entry,
          $field_natures, $field_lengths;
-         
+
   $name = $var;
   $label = get_loc_field_name($tbl_entry, $key);
-         
+
   // Output a radio group if it's a boolean or integer <= 2 bytes (which we will
   // assume are intended to be booleans)
-  if (($field_natures[$key] == 'boolean') || 
+  if (($field_natures[$key] == 'boolean') ||
       (($field_natures[$key] == 'integer') && isset($field_lengths[$key]) && ($field_lengths[$key] <= 2)) )
   {
     $options = array(BOOLEAN_MATCH_BOTH  => get_vocab('both'),
@@ -216,7 +228,7 @@ function get_field_custom($data, $key)
                     'field' => "entry.$key");
     $field = get_field_report_input($params);
   }
-  
+
   return $field;
 }
 
@@ -227,7 +239,7 @@ function get_field_custom($data, $key)
 function get_field_report_input($params)
 {
   global $select_options, $datalist_options;
-  
+
   // If $select_options is defined we want to force a <datalist> and not a
   // <select>.  That's because if we have options such as
   // ('tea', 'white coffee', 'black coffee') we want the user to be able to type
@@ -243,7 +255,7 @@ function get_field_report_input($params)
       $options = $datalist_options[$params['field']];
     }
   }
-  
+
   if (isset($options))
   {
     // Remove any element with an empty key.  This will just be associated with a
@@ -260,12 +272,12 @@ function get_field_report_input($params)
   {
     $field = new FieldInputText();
   }
-  
+
   $field->setAttribute('id', 'div_' . $params['name'])
         ->setLabel($params['label'])
         ->setControlAttributes(array('name'  => $params['name'],
                                      'value' => $params['value']));
-  
+
   return $field;
 }
 
@@ -273,10 +285,10 @@ function get_field_report_input($params)
 function get_fieldset_search_criteria($data)
 {
   global $report_search_field_order;
-  
+
   $fieldset = new ElementFieldset();
   $fieldset->addLegend(get_vocab('search_criteria'));
-  
+
   foreach ($report_search_field_order as $key)
   {
     switch ($key)
@@ -284,23 +296,23 @@ function get_fieldset_search_criteria($data)
       case 'report_start':
         $fieldset->addElement(get_field_from_date($data));
         break;
-        
+
       case 'report_end':
         $fieldset->addElement(get_field_to_date($data));
         break;
-        
+
       case 'areamatch':
         $fieldset->addElement(get_field_areamatch($data));
         break;
-        
+
       case 'roommatch':
         $fieldset->addElement(get_field_roommatch($data));
         break;
-        
+
       case 'typematch':
         $fieldset->addElement(get_field_typematch($data));
         break;
-        
+
       case 'namematch':
         $params = array('label' => get_vocab('match_entry'),
                         'name'  => 'namematch',
@@ -308,7 +320,7 @@ function get_fieldset_search_criteria($data)
                         'field' => 'entry.name');
         $fieldset->addElement(get_field_report_input($params));
         break;
-        
+
       case 'descrmatch':
         $params = array('label' => get_vocab('match_descr'),
                         'name'  => 'descrmatch',
@@ -316,7 +328,7 @@ function get_fieldset_search_criteria($data)
                         'field' => 'entry.description');
         $fieldset->addElement(get_field_report_input($params));
         break;
-        
+
       case 'creatormatch':
         $params = array('label' => get_vocab('createdby'),
                         'name'  => 'creatormatch',
@@ -324,27 +336,27 @@ function get_fieldset_search_criteria($data)
                         'field' => 'entry.create_by');
         $fieldset->addElement(get_field_report_input($params));
         break;
-        
+
       case 'match_private':
         $fieldset->addElement(get_field_match_private($data));
         break;
-        
+
       case 'match_confirmed':
         $fieldset->addElement(get_field_match_confirmed($data));
         break;
-        
+
       case 'match_approved':
         $fieldset->addElement(get_field_match_approved($data));
         break;
-        
+
       default:
         // Must be a custom field
         $fieldset->addElement(get_field_custom($data, $key));
         break;
     } // switch
   } // foreach
-  
-  return $fieldset; 
+
+  return $fieldset;
 }
 
 
@@ -362,7 +374,10 @@ function get_field_output($data)
 function get_field_output_format($data)
 {
   global $times_somewhere;
-  
+
+  // Note that it's useful to have the server-side CSV option here even though we've also got the
+  // DataTables client-side CSV button, because report.php can be run as a cron job to produce regular
+  // reports in CSV format.
   $options = array(OUTPUT_HTML => get_vocab('html'),
                    OUTPUT_CSV  => get_vocab('csv'));
   // The iCal output button
@@ -370,7 +385,7 @@ function get_field_output_format($data)
   {
     $options[OUTPUT_ICAL] = get_vocab('ical');
   }
-  
+
   $field = new FieldInputRadioGroup();
   $field->setLabel(get_vocab('format'))
         ->addRadioOptions($options, 'output_format', $data['output_format'], true);
@@ -404,10 +419,10 @@ function get_field_sumby($data)
 function get_fieldset_presentation_options($data)
 {
   global $report_presentation_field_order;
-  
+
   $fieldset = new ElementFieldset();
   $fieldset->addLegend(get_vocab('presentation_options'));
-  
+
   foreach ($report_presentation_field_order as $key)
   {
     switch ($key)
@@ -415,24 +430,24 @@ function get_fieldset_presentation_options($data)
       case 'output':
         $fieldset->addElement(get_field_output($data));
         break;
-        
+
       case 'output_format':
         $fieldset->addElement(get_field_output_format($data));
         break;
-      
+
       case 'sortby':
         $fieldset->addElement(get_field_sortby($data));
         break;
-        
+
       case 'sumby':
         $fieldset->addElement(get_field_sumby($data));
         break;
-        
+
       default:
-        break;  
+        break;
     } // switch
   } // foreach
-  
+
   return $fieldset;
 }
 
@@ -443,9 +458,9 @@ function get_fieldset_submit_buttons()
 
   $field = new FieldInputSubmit();
   $field->setControlAttribute('value', get_vocab('submitquery'));
-  
+
   $fieldset->addElement($field);
-  
+
   return $fieldset;
 }
 
@@ -454,14 +469,14 @@ function get_fieldset_submit_buttons()
 function is_little_endian()
 {
   static $result;
-  
+
   if (!isset($result))
   {
     $testint = 0x00FF;
     $p = pack('S', $testint);
     $result = ($testint===current(unpack('v', $p)));
   }
-  
+
   return $result;
 }
 
@@ -472,18 +487,18 @@ function csv_conv($string)
 {
   $in_charset = utf8_strtoupper(get_charset());
   $out_charset = utf8_strtoupper(get_csv_charset());
-  
+
   // Use iconv() if it exists because it's faster than our own code and also it's
   // standard (though it has the disadvantage that it adds in BOMs which we have to remove)
   if (function_exists('iconv'))
-  { 
+  {
     if ($out_charset == 'UTF-16')
     {
       // If the endian-ness hasn't been specified, then state it explicitly, because
       // Windows and Unix will use different defaults on the same architecture.
       $out_charset .= (is_little_endian()) ? 'LE' : 'BE';
     }
-    
+
     $result = iconv($in_charset, $out_charset, $string);
     // iconv() will add in a BOM if the output encoding requires one, but as we are only
     // dealing with parts of a file we don't want any BOMs because we add them separately
@@ -510,7 +525,7 @@ function csv_conv($string)
     trigger_error("Cannot convert from $in_charset to $out_charset", E_USER_NOTICE);
     $result = FALSE;
   }
-  
+
   return $result;
 }
 
@@ -519,7 +534,7 @@ function csv_conv($string)
 function escape($string)
 {
   global $output_format;
-  
+
   switch ($output_format)
   {
     case OUTPUT_HTML:
@@ -540,7 +555,7 @@ function escape($string)
 function type_wrap($string, $data_type)
 {
   global $output_format;
-  
+
   if ($output_format == OUTPUT_HTML)
   {
     return '<span class="normal" data-type="' . $data_type . '">' . $string . '</span>';
@@ -555,20 +570,20 @@ function type_wrap($string, $data_type)
 // Output the first row (header row) for CSV reports
 function report_header()
 {
-  global $output_format, $ajax;
+  global $output_format, $is_ajax;
   global $custom_fields, $tbl_entry;
   global $approval_somewhere, $confirmation_somewhere;
   global $field_order_list, $booking_types;
 
   // Don't do anything if this is an Ajax request: we only want to send the data
-  if ($ajax)
+  if ($is_ajax)
   {
     return;
   }
-  
+
   // Build an array of values to go into the header row
   $values = array();
-  
+
   foreach ($field_order_list as $field)
   {
     // We give some columns a type data value so that the JavaScript knows how to sort them
@@ -594,12 +609,12 @@ function report_header()
         $values[] = get_vocab("fulldescription_short");
         break;
       case 'type':
-        if (count($booking_types) > 1)
+        if (isset($booking_types) && (count($booking_types) > 1))
         {
           $values[] = get_vocab("type");
         }
         break;
-      case 'create_by': 
+      case 'create_by':
         $values[] = get_vocab("createdby");
         break;
       case 'confirmation_enabled':
@@ -626,8 +641,8 @@ function report_header()
         break;
     }  // switch
   }  // foreach
-  
-  
+
+
   // Find out what the non-breaking space is in this character set
   $charset = get_charset();
   $nbsp = html_entity_decode('&nbsp;', ENT_NOQUOTES, $charset);
@@ -645,9 +660,9 @@ function report_header()
       // And some of them contain HTML entities such as &nbsp; on purpose
       $values[$i] = escape($values[$i]);
     }
-    
+
   }
-  
+
   $head_rows = array();
   $head_rows[] = $values;
   output_head_rows($head_rows, $output_format);
@@ -656,9 +671,9 @@ function report_header()
 
 function open_report()
 {
-  global $output_format, $ajax;
-  
-  if ($output_format == OUTPUT_HTML && !$ajax)
+  global $output_format, $is_ajax;
+
+  if ($output_format == OUTPUT_HTML && !$is_ajax)
   {
     echo "<div id=\"report_output\" class=\"datatable_container\">\n";
     echo "<table class=\"admin_table display\" id=\"report_table\">\n";
@@ -668,10 +683,10 @@ function open_report()
 
 function close_report()
 {
-  global $output_format, $ajax, $json_data;
-  
+  global $output_format, $is_ajax, $json_data;
+
   // If this is an Ajax request, we can now send the JSON data
-  if ($ajax)
+  if ($is_ajax)
   {
     http_headers(array("Content-Type: application/json"));
     echo json_encode($json_data);
@@ -687,7 +702,7 @@ function close_report()
 function open_summary()
 {
   global $output_format, $times_somewhere, $periods_somewhere;
-  
+
   if ($output_format == OUTPUT_HTML)
   {
     echo "<div id=\"div_summary\" class=\"js_hidden\">\n";
@@ -709,7 +724,7 @@ function open_summary()
 function close_summary()
 {
   global $output_format;
-  
+
   if ($output_format == OUTPUT_HTML)
   {
     echo "</table>\n";
@@ -721,9 +736,9 @@ function close_summary()
 // Output a table row.
 function output_row(&$values, $output_format, $body_row = TRUE)
 {
-  global $json_data, $ajax, $csv_col_sep, $csv_row_sep;
-  
-  if ($ajax && $body_row)
+  global $json_data, $is_ajax, $csv_col_sep, $csv_row_sep;
+
+  if ($is_ajax && $body_row)
   {
     $json_data['aaData'][] = $values;
   }
@@ -755,7 +770,7 @@ function output_head_rows(&$rows, $format)
   {
     return;
   }
-  
+
   if ($format == OUTPUT_HTML)
   {
     echo "<colgroup>";
@@ -776,19 +791,19 @@ function output_head_rows(&$rows, $format)
 
 function output_body_rows(&$rows, $format)
 {
-  global $ajax;
-  
+  global $is_ajax;
+
   if (count($rows) == 0)
   {
     return;
   }
-  
-  echo (($format == OUTPUT_HTML) && !$ajax) ? "<tbody>\n" : "";
+
+  echo (($format == OUTPUT_HTML) && !$is_ajax) ? "<tbody>\n" : "";
   foreach ($rows as $row)
   {
     output_row($row, $format, TRUE);
   }
-  echo (($format == OUTPUT_HTML) && !$ajax) ? "</tbody>\n" : "";
+  echo (($format == OUTPUT_HTML) && !$is_ajax) ? "</tbody>\n" : "";
 }
 
 
@@ -798,7 +813,7 @@ function output_foot_rows(&$rows, $format)
   {
     return;
   }
-  
+
   echo ($format == OUTPUT_HTML) ? "<tfoot>\n" : "";
   foreach ($rows as $row)
   {
@@ -810,28 +825,26 @@ function output_foot_rows(&$rows, $format)
 
 function report_row(&$rows, &$data)
 {
-  global $output_format, $ajax, $ajax_capable;
-  global $csv_row_sep, $csv_col_sep;
-  global $custom_fields, $field_natures, $field_lengths, $tbl_entry;
+  global $output_format, $is_ajax, $ajax_capable;
+  global $custom_fields, $field_natures, $field_lengths;
   global $approval_somewhere, $confirmation_somewhere;
-  global $strftime_format;
   global $select_options, $booking_types;
   global $field_order_list;
-  
+
   // If we're capable of delivering an Ajax request and this is not Ajax request,
   // then don't do anything.  We're going to save sending the data until we actually
   // get the Ajax request;  we just send the rest of the page at this stage.
-  if (($output_format == OUTPUT_HTML) && $ajax_capable && !$ajax)
+  if (($output_format == OUTPUT_HTML) && $ajax_capable && !$is_ajax)
   {
     return;
   }
-  
+
   $values = array();
-  
+
   foreach ($field_order_list as $field)
   {
     $value = $data[$field];
-    
+
     // Some fields need some special processing to turn the raw value into something
     // more meaningful
     switch ($field)
@@ -891,7 +904,7 @@ function report_row(&$rows, &$data)
         {
           // Output a yes/no if it's a boolean or integer <= 2 bytes (which we will
           // assume are intended to be booleans)
-          if (($field_natures[$field] == 'boolean') || 
+          if (($field_natures[$field] == 'boolean') ||
               (($field_natures[$field] == 'integer') && isset($field_lengths[$field]) && ($field_lengths[$field] <= 2)) )
           {
             $value = empty($value) ? get_vocab("no") : get_vocab("yes");
@@ -903,7 +916,7 @@ function report_row(&$rows, &$data)
             // the value rather than the array key (provided the key is not
             // an empty string)
             if (isset($select_options["entry.$field"]) &&
-                is_assoc($select_options["entry.$field"]) && 
+                is_assoc($select_options["entry.$field"]) &&
                 array_key_exists($value, $select_options["entry.$field"]) &&
                 ($value !== ''))
             {
@@ -918,7 +931,7 @@ function report_row(&$rows, &$data)
         break;
     }
     $value = escape($value);
-    
+
     // For HTML output we take special action for some fields
     if ($output_format == OUTPUT_HTML)
     {
@@ -945,12 +958,12 @@ function report_row(&$rows, &$data)
           break;
       }
     }
-    
+
     // Add the value to the array.   We don't bother with some fields if
     // they are going to be irrelevant
     if (($confirmation_somewhere || ($field != 'confirmation_enabled')) &&
         ($approval_somewhere || ($field != 'approval_enabled')) &&
-        ((count($booking_types) > 1) || ($field != 'type')))
+        ((isset($booking_types) && (count($booking_types) > 1)) || ($field != 'type')))
     {
       $values[] = $value;
     }
@@ -959,9 +972,9 @@ function report_row(&$rows, &$data)
     {
       $values[] = $d_string;
     }
-    
+
   }  // foreach
-  
+
   $rows[] = $values;
 }
 
@@ -969,7 +982,7 @@ function report_row(&$rows, &$data)
 function get_sumby_name_from_row(&$row)
 {
   global $sumby;
-  
+
   // Use brief description, created by or type as the name:
   switch( $sumby )
   {
@@ -1009,9 +1022,9 @@ function accumulate(&$row, &$count, &$hours, $report_start, $report_end,
                     &$room_hash, &$name_hash)
 {
   global $output_format, $periods;
-  
+
   $periods_per_day = count($periods);
-  
+
   $row['enable_periods']; ////////////////////////
   // Use brief description, created by or type as the name:
   $name = get_sumby_name_from_row($row);
@@ -1028,17 +1041,17 @@ function accumulate(&$row, &$count, &$hours, $report_start, $report_end,
     // on those days.   Otherwise if the report starts or ends in the middle of a multi-day
     // booking we'll get all those spurious minutes before noon or between the end of
     // the last period and midnight
-    
+
     // Need to use the MRBS version of DateTime to get round a bug in modify()
     // in PHP before 5.3.6.  As we are in the MRBS namespace we will get the MRBS version.
     $startDate = new DateTime();
     $startDate->setTimestamp($report_start)->modify('12:00');
-    
+
     $endDate = new DateTime();
     $endDate->setTimestamp($report_end)->modify('12:00');
     $endDate->sub(new \DateInterval('P1D'));  // Go back one day because the $report_end is at 00:00 the day after
     $endDate->add(new \DateInterval('PT' . $periods_per_day . 'M'));
-    
+
     $increment = get_period_interval(max($row['start_time'], $startDate->getTimestamp()),
                                      min($row['end_time'], $endDate->getTimestamp()));
     $room_hash[$room] = MODE_PERIODS;
@@ -1059,7 +1072,7 @@ function accumulate(&$row, &$count, &$hours, $report_start, $report_end,
 function entries_format($str)
 {
   global $output_format;
-  
+
   if ($output_format == OUTPUT_HTML)
   {
     return "($str)";
@@ -1078,7 +1091,7 @@ function do_summary(&$count, &$hours, &$room_hash, &$name_hash)
 {
   global $output_format, $csv_col_sep;
   global $times_somewhere, $periods_somewhere;
-        
+
   // Sort the room and name arrays
   ksort($room_hash);
   ksort($name_hash);
@@ -1088,8 +1101,8 @@ function do_summary(&$count, &$hours, &$room_hash, &$name_hash)
     $grand_count_total[$m] = 0;
     $grand_hours_total[$m] = 0;
   }
-  
-  
+
+
   // TABLE HEAD
   // ----------
   $head_rows = array();
@@ -1106,7 +1119,7 @@ function do_summary(&$count, &$hours, &$room_hash, &$name_hash)
     $row2_cells[] = get_vocab("entries");
     $row2_cells[] = ($mode == MODE_PERIODS) ? get_vocab("periods") : get_vocab("hours");
   }
-  
+
   // Add the total column(s) onto the end
   if ($times_somewhere)
   {
@@ -1122,7 +1135,7 @@ function do_summary(&$count, &$hours, &$room_hash, &$name_hash)
     $row2_cells[] = get_vocab("entries");
     $row2_cells[] = get_vocab("periods");
   }
-  
+
   // Add the rows to the array of header rows, for output later
   $head_rows[] = $row1_cells;
   $head_rows[] = $row2_cells;
@@ -1178,8 +1191,8 @@ function do_summary(&$count, &$hours, &$room_hash, &$name_hash)
       $grand_hours_total[$m] += $row_hours_total[$m];
     }
   }
-  
-  
+
+
   // TABLE FOOT
   // ----------
   $foot_rows = array();
@@ -1203,8 +1216,8 @@ function do_summary(&$count, &$hours, &$room_hash, &$name_hash)
     $cells[] = sprintf(FORMAT_PERIODS, $grand_hours_total[MODE_PERIODS]);
   }
   $foot_rows[] = $cells;
-  
-  
+
+
   // OUTPUT THE TABLE
   // ----------------
   if ($output_format == OUTPUT_HTML)
@@ -1228,32 +1241,32 @@ function get_match_condition($full_column_name, $match, &$sql_params)
   global $select_options, $field_natures, $field_lengths;
 
   $sql = '';
-  
+
   // First simple case: no match required
   if (!isset($match) || $match === '')
   {
     return $sql;
   }
-  
+
   // Get the table name and alias
   $aliases = array('area'  => 'A',
                    'entry' => 'E',
                    'room'  => 'R');
-                   
+
   list($table_alias, $column) = explode('.', $full_column_name, 2);
   $table = array_search($table_alias, $aliases);
-  
+
   // Next simple case: for tables other than the entry table we are not going to
   // bother with complicated things such as custom fields or select_options
   if ($table != 'entry')
-  { 
+  {
     // syntax_caseless_contains() modifies the SQL params array too
     $sql .= " AND" . db()->syntax_caseless_contains("$full_column_name", $match, $sql_params);
     return $sql;
   }
-  
+
   // More complicated cases:
-  
+
   // (1) Associative arrays (we can't just test for the string, because the database
   // contains the keys, not the values.   So we have to go through each key testing
   // for a possible match)
@@ -1283,7 +1296,7 @@ function get_match_condition($full_column_name, $match, &$sql_params)
     }
   }
   // (2) Booleans (or integers <= 2 bytes which we assume are intended to be booleans)
-  elseif (($field_natures[$column] == 'boolean') || 
+  elseif (($field_natures[$column] == 'boolean') ||
           (($field_natures[$column] == 'integer') && isset($field_lengths[$column]) && ($field_lengths[$column] <= 2)) )
   {
     if (($match != BOOLEAN_MATCH_BOTH) && ($match !== ''))
@@ -1306,7 +1319,7 @@ function get_match_condition($full_column_name, $match, &$sql_params)
     // syntax_caseless_contains() modifies the SQL params array too
     $sql .= " AND" . db()->syntax_caseless_contains("$full_column_name", $match, $sql_params);
   }
-  
+
   return $sql;
 }
 
@@ -1318,7 +1331,7 @@ if ($cli_mode)
   // Need to set include path if we're running in CLI mode
   // (because otherwise PHP looks in the current directory rather
   // than the directory from which the script was called)
-  ini_set("include_path", dirname($PHP_SELF));
+  ini_set("include_path", dirname(url_path()));
 }
 
 $default_from_time = mktime(0, 0, 0, $month, $day, $year);
@@ -1343,16 +1356,18 @@ $match_approved = get_form_var('match_approved', 'int', BOOLEAN_MATCH_BOTH);
 $match_confirmed = get_form_var('match_confirmed', 'int', BOOLEAN_MATCH_BOTH);
 $match_private = get_form_var('match_private', 'int', BOOLEAN_MATCH_BOTH);
 $phase = get_form_var('phase', 'int', 1);
-$ajax = get_form_var('ajax', 'int');  // Set if this is an Ajax request
 $datatable = get_form_var('datatable', 'int');  // Will only be set if we're using DataTables
 
 list($from_year, $from_month, $from_day) = split_iso_date($from_date);
 list($to_year, $to_month, $to_day) = split_iso_date($to_date);
 
-// Check the user is authorised for this page
+$is_ajax = is_ajax();
+
 if ($cli_mode)
 {
-  $is_admin = TRUE;
+  // If we're running in CLI mode we're passing the parameters in from the command line
+  // not the form and we want to go straight to Phase 2 (producing the report)
+  $phase = 2;
 }
 else
 {
@@ -1361,19 +1376,11 @@ else
   {
     Form::checkToken(true);
   }
-  
-  checkAuthorised();
-  // Also need to know whether they have admin rights
+
+  // Check the user is authorised for this page
+  checkAuthorised(this_page());
   $user = getUserName();
   $user_level = authGetUserLevel($user);
-  $is_admin =  ($user_level >= 2);
-}
-
-// If we're running in CLI mode we're passing the parameters in from the command line
-// not the form and we want to go straight to Phase 2 (producing the report)
-if ($cli_mode)
-{
-  $phase = 2;
 }
 
 // Set up for Ajax.   We need to know whether we're capable of dealing with Ajax
@@ -1381,7 +1388,7 @@ if ($cli_mode)
 // to initialise the JSON data array.
 $ajax_capable = $datatable;
 
-if ($ajax)
+if ($is_ajax)
 {
   $json_data['aaData'] = array();
 }
@@ -1409,7 +1416,7 @@ $report_search_fields = array('report_start', 'report_end',
                               'areamatch', 'roommatch',
                               'typematch', 'namematch', 'descrmatch', 'creatormatch',
                               'match_private', 'match_confirmed', 'match_approved');
-  
+
 foreach ($report_search_fields as $field)
 {
   if (!in_array($field, $report_search_field_order))
@@ -1417,7 +1424,7 @@ foreach ($report_search_fields as $field)
     $report_search_field_order[] = $field;
   }
 }
-  
+
 // Get information about custom fields
 $fields = db()->field_info($tbl_entry);
 $custom_fields = array();
@@ -1473,7 +1480,7 @@ if ($phase == 2)
   // Start and end times are also used to clip the times for summary info.
   $report_start = mktime(0, 0, 0, $from_month+0, $from_day+0, $from_year+0);
   $report_end = mktime(0, 0, 0, $to_month+0, $to_day+1, $to_year+0);
-  
+
   // Construct the SQL query
   $sql_params = array();
   $sql = "SELECT E.*, "
@@ -1484,7 +1491,7 @@ if ($phase == 2)
   {
     // If we're producing an iCalendar then we'll also need the repeat
     // information in order to construct the recurrence rule
-    $sql .= ", T.rep_type, T.end_date, T.rep_opt, T.rep_num_weeks, T.month_absolute, T.month_relative";
+    $sql .= ", T.rep_type, T.end_date, T.rep_opt, T.rep_interval, T.month_absolute, T.month_relative";
   }
   $sql .= " FROM $tbl_area A, $tbl_room R, $tbl_entry E";
   if ($output_format == OUTPUT_ICAL)
@@ -1502,19 +1509,19 @@ if ($phase == 2)
     // We can't export periods in an iCalendar yet
     $sql .= " AND A.enable_periods=0";
   }
-  
+
   // Get the match conditions for the simple cases
   $match_columns = array('A.area_name'    => $areamatch,
                          'R.room_name'    => $roommatch,
                          'E.name'         => $namematch,
                          'E.description'  => $descrmatch,
                          'E.create_by'    => $creatormatch);
-                        
+
   foreach ($match_columns as $column => $match)
   {
     $sql .= get_match_condition($column, $match, $sql_params);
   }
-  
+
   // Then do the special cases
   if (!empty($typematch))
   {
@@ -1527,12 +1534,12 @@ if ($phase == 2)
     }
     $sql .= "(". implode(" OR ", $or_array ) .")";
   }
-  
+
   // (In the next three cases, you will get the empty string if that part
   // of the form was not displayed - which means that you need all bookings)
   // Note that although you can say eg "status&STATUS_PRIVATE" in MySQL, you get
   // an error in PostgreSQL as the expression is of the wrong type.
-  
+
   // Match the privacy status
   if (($match_private != BOOLEAN_MATCH_BOTH) && ($match_private !== ''))
   {
@@ -1555,7 +1562,7 @@ if ($phase == 2)
     $sql .= "(E.status&" . STATUS_AWAITING_APPROVAL;
     $sql .= ($match_approved) ? "=0)" : "!=0)";
   }
-  
+
   // Then do the custom fields
   foreach ($custom_fields as $key => $value)
   {
@@ -1563,11 +1570,18 @@ if ($phase == 2)
     $sql .= get_match_condition("E.$key", $$var, $sql_params);
   }
 
+  // We only want the bookings for rooms that are visible
+  $invisible_room_ids = get_invisible_room_ids();
+  if (count($invisible_room_ids) > 0)
+  {
+    $sql .= " AND (E.room_id NOT IN (" . implode(',', $invisible_room_ids) . "))";
+  }
+
   // If we're not an admin (they are allowed to see everything), then we need
   // to make sure we respect the privacy settings.  (We rely on the privacy fields
   // in the area table being not NULL.   If they are by some chance NULL, then no
   // entries will be found, which is at least safe from the privacy viewpoint)
-  if (!$is_admin)
+  if (!$cli_mode && !is_book_admin())
   {
     if (isset($user))
     {
@@ -1590,7 +1604,7 @@ if ($phase == 2)
                      (A.private_override='none' AND (E.status&" . STATUS_PRIVATE . "=0)))";
     }
   }
-  
+
   if ($output_format == OUTPUT_ICAL)
   {
     // If we're producing an iCalendar then we'll want the entries ordered by
@@ -1616,18 +1630,18 @@ if ($phase == 2)
 
 $combination_not_supported = ($output == SUMMARY) && ($output_format == OUTPUT_ICAL);
 
-$output_form = (($output_format == OUTPUT_HTML) && !$ajax &&!$cli_mode) ||
+$output_form = (($output_format == OUTPUT_HTML) && !$is_ajax &&!$cli_mode) ||
                $combination_not_supported;
-               
-               
+
+
 // print the page header
-if ($ajax)
+if ($is_ajax)
 {
   // don't do anything if this is an Ajax request:  we only want the data
 }
 elseif ($output_form)
 {
-  print_header($day, $month, $year, $area, isset($room) ? $room : null);
+  print_header($view, $view_all, $year, $month, $day, $area, isset($room) ? $room : null);
 }
 else
 {
@@ -1661,9 +1675,9 @@ else
 if ($output_form)
 {
   echo "<div class=\"screenonly\">\n";
- 
+
   $form = new Form();
-  
+
   // Search variables
   $search_var_keys = array('from_day', 'from_month', 'from_year',
                            'to_day', 'to_month', 'to_year',
@@ -1676,7 +1690,7 @@ if ($output_form)
   {
     $search_vars[$var] = $$var;
   }
-  
+
   // Presentation variables
   $presentation_var_keys = array('output', 'output_format',
                                  'sortby', 'sumby');
@@ -1685,25 +1699,25 @@ if ($output_form)
   {
     $presentation_vars[$var] = $$var;
   }
-  
+
   $attributes = array('id'     => 'report_form',
                       'class'  => 'standard',
                       'action' => 'report.php',
                       'method' => 'post');
-                    
+
   $form->setAttributes($attributes)
        ->addHiddenInput('phase', '2');
-  
+
   $outer_fieldset = new ElementFieldset();
   $outer_fieldset->addLegend(get_vocab('report_on'))
                  ->addElement(get_fieldset_search_criteria($search_vars))
                  ->addElement(get_fieldset_presentation_options($presentation_vars))
                  ->addElement(get_fieldset_submit_buttons());
-  
+
   $form->addElement($outer_fieldset);
-  
+
   $form->render();
-  
+
   echo "</div>\n";
 }
 
@@ -1712,7 +1726,7 @@ if ($phase == 2)
 {
   if (($nmatch == 0) && !$cli_mode && ($output_format == OUTPUT_HTML))
   {
-    if ($ajax)
+    if ($is_ajax)
     {
       http_headers(array("Content-Type: application/json"));
       echo json_encode($json_data);
@@ -1737,21 +1751,21 @@ if ($phase == 2)
       export_icalendar($res, FALSE, $report_end);
       exit;
     }
-    
-    if (($output_format == OUTPUT_HTML) && !$ajax)
+
+    if (($output_format == OUTPUT_HTML) && !$is_ajax)
     {
       echo "<p class=\"report_entries\"><span id=\"n_entries\">" . $nmatch . "</span> "
       . ($nmatch == 1 ? get_vocab("entry_found") : get_vocab("entries_found"))
       .  "</p>\n";
     }
-    
+
     // Report
     if ($output == REPORT)
     {
       open_report();
       report_header();
       $body_rows = array();
-      for ($i = 0; ($row = $res->row_keyed($i)); $i++)
+      while (false !== ($row = $res->next_row_keyed()))
       {
         unpack_status($row);
         report_row($body_rows, $row);
@@ -1765,7 +1779,7 @@ if ($phase == 2)
       open_summary();
       if ($nmatch > 0)
       {
-        for ($i = 0; ($row = $res->row_keyed($i)); $i++)
+        while (false !== ($row = $res->next_row_keyed()))
         {
           unpack_status($row);
           accumulate($row, $count, $hours,
@@ -1793,6 +1807,5 @@ if ($cli_mode)
 
 if ($output_form)
 {
-  output_trailer();
+  print_footer();
 }
-

@@ -18,7 +18,7 @@ $vocab["help"]               = "帮助";
 $vocab["search"]             = "搜索";
 $vocab["outstanding"]        = "待定的预订";
 
-// Used in day.php
+// Used in index.php
 $vocab["bookingsfor"]        = "预订:";
 $vocab["bookingsforpost"]    = "";
 $vocab["areas"]              = "区域";
@@ -26,9 +26,19 @@ $vocab["daybefore"]          = "前一天";
 $vocab["dayafter"]           = "后一天";
 $vocab["gototoday"]          = "今天";
 $vocab["goto"]               = "前往";
+$vocab["nav_day"]            = "Day";
+$vocab["nav_week"]           = "Week";
+$vocab["nav_month"]          = "Month";
 $vocab["highlight_line"]     = "高亮显示这一行";
 $vocab["click_to_reserve"]   = "点击单元格进行预订";
 $vocab["timezone"]           = "时区";
+$vocab["weekbefore"]         = "前一周";
+$vocab["weekafter"]          = "后一周";
+$vocab["gotothisweek"]       = "本周";
+$vocab["monthbefore"]        = "上个月";
+$vocab["monthafter"]         = "下个月";
+$vocab["gotothismonth"]      = "本月";
+$vocab["no_rooms_for_area"]  = "这个区域没有定义房间";
 
 // Used in trailer.inc
 $vocab["viewday"]            = "日视图";
@@ -58,9 +68,9 @@ $vocab["minute_lc"]          = "分";
 $vocab["minutes"]            = "分";
 $vocab["hour_lc"]            = "小时";
 $vocab["hours"]              = "小时";
-$vocab["day_lc"]             = "天";
+$vocab["day"]                = "天";
 $vocab["days"]               = "天";
-$vocab["week_lc"]            = "星期";
+$vocab["week"]               = "星期";
 $vocab["weeks"]              = "星期";
 $vocab["year_lc"]            = "年";
 $vocab["years"]              = "年";
@@ -88,17 +98,13 @@ $vocab["ord_-4"]             = "倒数第四";
 $vocab["ord_-5"]             = "倒数第五";
 $vocab["rep_end_date"]       = "结束重复的日期";
 $vocab["rep_rep_day"]        = "重复的星期";
-$vocab["rep_freq"]           = "频率";
-$vocab["rep_num_weeks"]      = "重复几周(需大于1)";
 $vocab["month_absolute"]     = "于天";
 $vocab["month_relative"]     = "于此日";
 $vocab["skip_conflicts"]     = "跳过以前的冲突";
 $vocab["ctrl_click"]         = "用Ctrl+鼠标点击可以多选房间";
 $vocab["entryid"]            = "条目编号 ";
 $vocab["repeat_id"]          = "例会编号 ";
-$vocab["you_have_not_entered"] = "你没有输入";
 $vocab["brief_description"]  = "简要说明.";
-$vocab["useful_n-weekly_value"] = "可以提供预订的星期.";
 $vocab["status"]             = "状态";
 $vocab["public"]             = "公开";
 $vocab["private"]            = "私有";
@@ -160,10 +166,10 @@ $vocab["failed_to_acquire"]  = "获取独占式数据库访问失败";
 $vocab["invalid_booking"]    = "无效预订";
 $vocab["must_set_description"] = "你必须设置一个简要说明. 请返回重新输入";
 $vocab["no_rooms_selected"]    = "你必须选择一个房间.";
-$vocab["mail_subject_approved"]  = "已为 $mrbs_company 会议室预订系统批准了条目";
-$vocab["mail_subject_rejected"]  = "已为 $mrbs_company 会议室预订系统拒绝了条目";
-$vocab["mail_subject_more_info"] = "$mrbs_company 会议室预订系统: 申请的更多信息";
-$vocab["mail_subject_reminder"]  = "$mrbs_company 会议室预订系统的提醒";
+$vocab["mail_subject_approved"]  = "已为 %s 会议室预订系统批准了条目"; // $mrbs_company
+$vocab["mail_subject_rejected"]  = "已为 %s 会议室预订系统拒绝了条目"; // $mrbs_company
+$vocab["mail_subject_more_info"] = "%s 会议室预订系统: 申请的更多信息"; // $mrbs_company
+$vocab["mail_subject_reminder"]  = "%s 会议室预订系统的提醒"; // $mrbs_company
 $vocab["mail_body_approved"]     = "管理员批准了一个条目; 详细情况如下:";
 $vocab["mail_body_rej_entry"]    = "管理员拒绝了一个条目; 详细情况如下:";
 $vocab["mail_body_more_info"]    = "管理员需要有关该条目的更多信息; 详细情况如下:";
@@ -171,15 +177,14 @@ $vocab["mail_body_reminder"]     = "提醒 - 有一个条目等待审批; 详细
 $vocab["mail_body_repeats_booked"]   = "下面的日期已被预订:";
 $vocab["mail_body_repeats_deleted"]  = "下面的预订已被删除:";
 $vocab["mail_body_exceptions"]       = "下面的日期因冲突的原因不能被预订:";
-$vocab["mail_subject_new_entry"]     = "已增加新条目 $mrbs_company 会议室预订系统";
-$vocab["mail_subject_changed_entry"] = "条目已修改 $mrbs_company 会议室预订系统";
-$vocab["mail_subject_delete"]        = "条目已删除 $mrbs_company 会议室预订系统";
+$vocab["mail_subject_new_entry"]     = "已增加新条目 %s 会议室预订系统"; // $mrbs_company
+$vocab["mail_subject_changed_entry"] = "条目已修改 %s 会议室预订系统"; // $mrbs_company
+$vocab["mail_subject_delete"]        = "条目已删除 %s 会议室预订系统"; // $mrbs_company
 $vocab["mail_body_new_entry"]     = "一个新条目被预订, 详细情况如下:";
 $vocab["mail_body_changed_entry"] = "一个条目被修改, 详细情况如下:";
 $vocab["mail_body_del_entry"]     = "一个条目被删除, 详细情况如下:";
 $vocab["new_value"]               = "新";
 $vocab["old_value"]               = "旧";
-$vocab["deleted_by"]              = "删除人";
 $vocab["reason"]                  = "原因";
 $vocab["info_requested"]          = "申请信息";
 $vocab["min_time_before"]         = "现在与预订起始之间的最小时间间隔是";
@@ -199,7 +204,6 @@ $vocab["max_per_year_area"]       = "该区域内每人每年最大预定数是"
 $vocab["max_per_future_area"]     = "该区域内每人每天最大重要预定数是";
 $vocab["skip_and_book"]           = "忽略并预订";
 $vocab["skip_and_book_note"]      = "继续预订, 忽略以前的有冲突的条目";
-$vocab["changes_saved"]           = "已保存修改";
 
 // Used in pending.php
 $vocab["pending"]            = "待批准的预订";
@@ -221,7 +225,7 @@ $vocab["username_or_email"]  = "用户名或电子邮件地址";
 $vocab["database_login"]           = "登录数据库";
 $vocab["upgrade_required"]         = "数据库需要升级.  在继续之前请先备份您的数据库.";
 $vocab["supply_userpass"]          = "请提供一个有管理员权限的数据库用户名和密码.";
-$vocab["contact_admin"]            = "如果您不是会议室预订系统的管理员, 请联系 $mrbs_admin.";
+$vocab["contact_admin"]            = "如果您不是会议室预订系统的管理员, 请联系 %s."; // $mrbs_admin
 $vocab["upgrade_to_version"]       = "正在升级到数据库版本";
 $vocab["upgrade_to_local_version"] = "正在升级到数据库本地版本";
 $vocab["upgrade_completed"]        = "数据库升级完成.";
@@ -269,7 +273,6 @@ $vocab["of"]                 = " 共 ";
 $vocab["previous"]           = "前一页";
 $vocab["next"]               = "下一页";
 $vocab["entry"]              = "条目";
-$vocab["advanced_search"]    = "高级搜索";
 $vocab["search_button"]      = "搜索";
 $vocab["search_for"]         = "搜索";
 $vocab["from"]               = "从";
@@ -318,19 +321,6 @@ $vocab["delete_entries_warning"] = "警告!  这将会删除所有符合搜索�
 
 $vocab["delete_entries_failed"] = "不能删除这些条目.";
 
-// Used in week.php
-$vocab["weekbefore"]         = "前一周";
-$vocab["weekafter"]          = "后一周";
-$vocab["gotothisweek"]       = "本周";
-
-// Used in month.php
-$vocab["monthbefore"]        = "上个月";
-$vocab["monthafter"]         = "下个月";
-$vocab["gotothismonth"]      = "本月";
-
-// Used in {day week month}.php
-$vocab["no_rooms_for_area"]  = "这个区域没有定义房间";
-
 // Used in admin.php
 $vocab["edit"]               = "编辑";
 $vocab["delete"]             = "删除";
@@ -367,7 +357,6 @@ $vocab["invalid_area"]            = "无效的区域!";
 $vocab["invalid_room_name"]       = "房间名在该区域内已被使用!";
 $vocab["invalid_email"]           = "无效的 Email 地址!";
 $vocab["invalid_resolution"]      = "第一时段、最后时段和分辨率的组合非法!";
-$vocab["too_many_slots"]          = '你需要在配置文件中加大 $max_slots 的的数值!';
 $vocab["general_settings"]        = "一般设置";
 $vocab["time_settings"]           = "时段设置";
 $vocab["confirmation_settings"]   = "确定设置";
@@ -478,7 +467,6 @@ $vocab["invalid_RRULE"]               = "RRULE 无效: 缺少 FREQ 部分";
 $vocab["more_than_one_BYDAY"]         = "当 FREQ= 时, MRBS 不支持多个 BYDAY 值";
 $vocab["BYDAY_equals_5"]              = "MRBS 不支持  BYDAY 数值为 5";
 $vocab["unsupported_FREQ"]            = "MRBS 不支持 FREQ=";
-$vocab["unsupported_INTERVAL"]        = "当 FREQ= 时, MRBS 不支持 INTERVAL>1";
 $vocab["unsupported_COUNT"]           = "MRBS 尚不支持 COUNT";
 $vocab["no_indefinite_repeats"]       = "MRBS 尚不支持无限循环";
 $vocab["events_imported"]             = "事件已被导入";

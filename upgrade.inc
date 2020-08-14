@@ -47,7 +47,7 @@ if (($current_db_schema_version < DB::DB_SCHEMA_VERSION) ||
     {
       // Get a username and password if we haven't got them
       echo '<p>' . get_vocab('supply_userpass') . "</p>\n";
-      echo '<p>' . get_vocab('contact_admin') . "</p>\n"; 
+      echo '<p>' . get_vocab('contact_admin', $mrbs_admin) . "</p>\n"; 
       db_get_userpass();
     }
     else
@@ -81,10 +81,6 @@ if (($current_db_schema_version < DB::DB_SCHEMA_VERSION) ||
   }
   echo "<a href=\"./\">" . get_vocab('returncal') . '</a>.';
   
-  // Populate the $maxlength global.   (We need to do this after any upgrade in case the
-  // upgrade has altered the table structures).
-  populate_maxlength();
-
   print_footer(true);
 }
 
@@ -107,7 +103,7 @@ function upgrade_echo($message)
 }
 
 
-function upgrade_database($local, $from, $to, $upgrade_handle)
+function upgrade_database($local, $from, $to, DB $upgrade_handle)
 {
   // $local is a boolean specifying whether the upgrades are global MRBS ones ($local === false)
   // or local upgrades ($local === true);

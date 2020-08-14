@@ -19,7 +19,7 @@ $vocab["help"]               = "Help";
 $vocab["search"]             = "Zoek";
 $vocab["outstanding"]        = "Openstaande boekingen";
 
-// Used in day.php
+// Used in index.php
 $vocab["bookingsfor"]        = "Boekingen voor";
 $vocab["bookingsforpost"]    = "";
 $vocab["areas"]              = "Gebouwen";
@@ -27,9 +27,19 @@ $vocab["daybefore"]          = "Naar Vorige Dag";
 $vocab["dayafter"]           = "Naar Volgende Dag";
 $vocab["gototoday"]          = "Naar Vandaag";
 $vocab["goto"]               = "ga naar";
+$vocab["nav_day"]            = "Dag";
+$vocab["nav_week"]           = "Week";
+$vocab["nav_month"]          = "Maand";
 $vocab["highlight_line"]     = "Markeer deze regel";
 $vocab["click_to_reserve"]   = "Klik op dit vak om een reservering te maken.";
 $vocab["timezone"]           = "Tijdzone";
+$vocab["weekbefore"]         = "Ga naar vorige week";
+$vocab["weekafter"]          = "Ga naar volgende week";
+$vocab["gotothisweek"]       = "Ga naar deze week";
+$vocab["monthbefore"]        = "Ga naar vorige maand";
+$vocab["monthafter"]         = "Ga naar volgende maand";
+$vocab["gotothismonth"]      = "Ga naar deze maand";
+$vocab["no_rooms_for_area"]  = "Nog geen kamers gedefiniëerd voor dit gebouw";
 
 // Used in trailer.inc
 $vocab["viewday"]            = "Bekijk Dag";
@@ -59,9 +69,9 @@ $vocab["minute_lc"]          = "minuut";
 $vocab["minutes"]            = "minuten";
 $vocab["hour_lc"]            = "uur";
 $vocab["hours"]              = "uren";
-$vocab["day_lc"]             = "dag";
+$vocab["day"]                = "dag";
 $vocab["days"]               = "dagen";
-$vocab["week_lc"]            = "week";
+$vocab["week"]               = "week";
 $vocab["weeks"]              = "weken";
 $vocab["year_lc"]            = "yaar";
 $vocab["years"]              = "jaren";
@@ -79,14 +89,11 @@ $vocab["rep_type_3"]         = "Maandelijks";
 $vocab["rep_type_4"]         = "Jaarlijks";
 $vocab["rep_end_date"]       = "Einde herhaling datum";
 $vocab["rep_rep_day"]        = "Herhalingsdag";
-$vocab["rep_freq"]           = "Frequentie";
-$vocab["rep_num_weeks"]      = "Herhaal om de";
+$vocab["rep_interval"]       = "Herhaal om de";
 $vocab["ctrl_click"]         = "Gebruik Control-Linker muis klik om meer dan 1 ruimte te reserveren";
 $vocab["entryid"]            = "Boeking-ID ";
 $vocab["repeat_id"]          = "Herhalings-ID "; 
-$vocab["you_have_not_entered"] = "U heeft het volgende niet ingevoerd : ";
 $vocab["brief_description"]  = "Korte Omschrijving.";
-$vocab["useful_n-weekly_value"] = "bruikbaar n-wekelijks aantal.";
 $vocab["status"]             = "Status";
 $vocab["private"]            = "Privé";
 $vocab["unavailable"]        = "Niet beschikbaar";
@@ -138,21 +145,20 @@ $vocab["returncal"]          = "Terug naar kalender overzicht";
 $vocab["failed_to_acquire"]  = "Het is niet gelukt om exclusive toegang tot de database te verkrijgen"; 
 $vocab["invalid_booking"]    = "Verkeerde boeking";
 $vocab["must_set_description"] = "Er moet een korte omschrijving worden gegeven. Ga terug een en geef korte omschrijving.";
-$vocab["mail_subject_approved"]  = "Invoer goedgekeurd voor $mrbs_company MRBS";
-$vocab["mail_subject_rejected"]  = "Invoer afgewezen voor $mrbs_company MRBS";
-$vocab["mail_subject_more_info"] = "$mrbs_company MRBS: meer informatie nodig";
-$vocab["mail_subject_reminder"]  = "Herinnering voor $mrbs_company MRBS";
+$vocab["mail_subject_approved"]  = "Invoer goedgekeurd voor %s MRBS"; // $mrbs_company
+$vocab["mail_subject_rejected"]  = "Invoer afgewezen voor %s MRBS"; // $mrbs_company
+$vocab["mail_subject_more_info"] = "%s MRBS: meer informatie nodig"; // $mrbs_company
+$vocab["mail_subject_reminder"]  = "Herinnering voor %s MRBS"; // $mrbs_company
 $vocab["mail_body_approved"]     = "Een boeking is goedgekeurd door de administrators; hier zijn de details:";
 $vocab["mail_body_rej_entry"]    = "Een boeking is afgewezen door de administrators, hier zijn de details:";
 $vocab["mail_body_more_info"]    = "De administrators hebben meer informatie nodig over de boeking; hier zijn de details:";
 $vocab["mail_body_reminder"]     = "Herinnering - een boeking wacht op goedkeuring; hier zijn de details:";
-$vocab["mail_subject_new_entry"]     = "Boeking toegevoegd voor $mrbs_company MRBS";
-$vocab["mail_subject_changed_entry"] = "Boeking aangepast voor $mrbs_company MRBS";
-$vocab["mail_subject_delete"]        = "Boeking gewist voor $mrbs_company MRBS";
+$vocab["mail_subject_new_entry"]     = "Boeking toegevoegd voor %s MRBS"; // $mrbs_company
+$vocab["mail_subject_changed_entry"] = "Boeking aangepast voor %s MRBS"; // $mrbs_company
+$vocab["mail_subject_delete"]        = "Boeking gewist voor %s MRBS"; // $mrbs_company
 $vocab["mail_body_new_entry"]     = "Er is een nieuwe boeking geplaatst, dit zijn de details:";
 $vocab["mail_body_changed_entry"] = "Een boeking is gewijzigd, dit zijn de details:";
 $vocab["mail_body_del_entry"]     = "Er is een boeking verdwijderd, dit zijn de details:";
-$vocab["deleted_by"]          = "Verwijderd door";
 $vocab["reason"]              = "Reden";
 $vocab["info_requested"]      = "Informatie nodig";
 $vocab["min_time_before"]     = "De minimale interval tussen nu en de start van een boeking is";
@@ -178,7 +184,7 @@ $vocab["username_or_email"]  = "Gebruikersnaam of e-mailadres";
 $vocab["database_login"]           = "Database login";
 $vocab["upgrade_required"]         = "De database heeft een upgrade nodig. Maak aub een backup van de database voordat verder wordt gegaan.";
 $vocab["supply_userpass"]          = "Geef aub een database gebruikernaam en wachtwoord met administrator rechten.";
-$vocab["contact_admin"]            = "Als u geen MRBS administrator bent, neem dan aub contact op met uw Administrator."; // Lost $mrbs_admin here
+$vocab["contact_admin"]            = "Als u geen MRBS administrator bent, neem dan aub contact op met uw Administrator.";  // $mrbs_admin
 $vocab["upgrade_to_version"]       = "Upgraden naar database versie";
 $vocab["upgrade_to_local_version"] = "Upgraden naar lokale versie database";
 $vocab["upgrade_completed"]        = "Database upgrade compleet.";
@@ -226,7 +232,6 @@ $vocab["of"]                 = " van ";
 $vocab["previous"]           = "Vorige";
 $vocab["next"]               = "Volgende";
 $vocab["entry"]              = "Boeking";
-$vocab["advanced_search"]    = "Uitgebreid Zoeken";
 $vocab["search_button"]      = "Zoek";
 $vocab["search_for"]         = "Zoeken naar";
 $vocab["from"]               = "Van";
@@ -258,19 +263,6 @@ $vocab["both"]                  = "Alles";
 $vocab["privacy_status"]        = "Privacy status";
 $vocab["search_criteria"]       = "Zoek criteria";
 $vocab["presentation_options"]  = "Presentatie mogelijkheden";
-
-// Used in week.php
-$vocab["weekbefore"]         = "Ga naar vorige week";
-$vocab["weekafter"]          = "Ga naar volgende week";
-$vocab["gotothisweek"]       = "Ga naar deze week";
-
-// Used in month.php
-$vocab["monthbefore"]        = "Ga naar vorige maand";
-$vocab["monthafter"]         = "Ga naar volgende maand";
-$vocab["gotothismonth"]      = "Ga naar deze maand";
-
-// Used in {day week month}.php
-$vocab["no_rooms_for_area"]  = "Nog geen kamers gedefiniëerd voor dit gebouw";
 
 // Used in admin.php
 $vocab["edit"]               = "Wijzig";
@@ -306,7 +298,6 @@ $vocab["invalid_area"]            = "Verkeerde ruimte!";
 $vocab["invalid_room_name"]       = "Deze kamer naam is al gebruikt in deze ruimte!";
 $vocab["invalid_email"]           = "Ongeldig email adres !";
 $vocab["invalid_resolution"]      = "Verkeerde combinatie van eerste slot, laatste slot en stappen!";
-$vocab["too_many_slots"]          = 'U moet de waarde van $max_slots verhogen in het config bestand!';
 $vocab["general_settings"]        = "Algemeen";
 $vocab["time_settings"]           = "Slot tijden";
 $vocab["confirmation_settings"]   = "Bevestiging instellingen";

@@ -66,17 +66,16 @@ class Form extends Element
   //        To cater for these pages the $post_only parameter should be set to TRUE.
   public static function checkToken($post_only=false)
   {
-    global $REMOTE_ADDR, $REQUEST_METHOD;
+    global $server;
     
-    if ($post_only && ($REQUEST_METHOD != 'POST'))
+    if ($post_only && ($server['REQUEST_METHOD'] != 'POST'))
     {
       return;
     }
       
     $token = \MRBS\get_form_var(self::$token_name, 'string', null, INPUT_POST);
     $stored_token = self::getStoredToken();
-	//edited by kkc on20190911 
-	//return;
+    
     if (!self::compareTokens($stored_token, $token))
     {
       if (isset($stored_token))
@@ -84,7 +83,7 @@ class Form extends Element
         // Only report a possible CSRF attack if the stored token exists.   If it doesn't
         // it's normally because the user session has expired in between the form being
         // displayed and submitted.
-        trigger_error("Possible CSRF attack from IP address $REMOTE_ADDR", E_USER_WARNING);
+        trigger_error('Possible CSRF attack from IP address ' . $server['REMOTE_ADDR'], E_USER_WARNING);
       }
       
       if (function_exists("\\MRBS\\logoff_user"))
@@ -240,7 +239,7 @@ class Form extends Element
 
     if (!empty($_COOKIE) && isset($_COOKIE["MRBS_CSRF"]))
     {
-      $token = \MRBS\unslashes($_COOKIE["MRBS_CSRF"]);
+      $token = $_COOKIE["MRBS_CSRF"];
     }
     
     //error_log("Checking CSRF cookie");

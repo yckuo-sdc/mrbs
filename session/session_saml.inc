@@ -29,7 +29,6 @@ require_once MRBS_ROOT . '/session/functions_session.inc';
 
 // Include the SimpleSamlPhp autoloader
 $sspPath = $auth['saml']['ssp_path'];
-
 if (is_null($sspPath))
 {
   header('Content-Type: text/plain', true, 500);
@@ -41,12 +40,10 @@ use \SimpleSAML_Auth_Simple;
 
 // Get the SimpleSamlPhp instance for the configured auth source
 $authSource = $auth['saml']['authsource'];
-
 if (is_null($authSource))
 {
   $authSource = 'default-sp';
 }
-
 $ssp = new SimpleSAML_Auth_Simple($authSource);
 
 
@@ -93,29 +90,23 @@ function getUserName()
 function print_logon_box()
 {
   global $ssp;
-  global $QUERY_STRING;
 
-  $target_url = this_page();
-
-  if (isset($QUERY_STRING))
-  {
-    $target_url = $target_url . "?" . $QUERY_STRING;
-  }
-
+  $target_url = this_page(true);
+  // Get URL base as well, so we can build the absolute URL below, as
+  // otherwise the redirect from the SAML login page may go back to the
+  // wrong place
+  $url_base = url_base();
   $user=getUserName();
 
   if ($ssp->isAuthenticated())
   {
     print_report_link(isset($user) ? $user : '-invalid-');
-    print_saml_logoff_button('/'.$target_url);
+    print_saml_logoff_button($url_base.$target_url);
   }
   else
   {
-    print_unknown_user();
-    print_saml_logon_button('/'.$target_url);
+    print_saml_logon_button($url_base.$target_url);
   }
-
-  print_userlist_link();
 }
 
 
@@ -128,6 +119,7 @@ function print_saml_logon_button($target_url)
   $url = $ssp->getLoginURL($target_url);
   $baseURL = strstr($url, '?', true);
   parse_str(substr(strstr($url, '?'), 1), $params);
+  
   $html = '';
 
   $html .= "<form method=\"get\" action=\"" . htmlspecialchars($baseURL) . "\">\n";

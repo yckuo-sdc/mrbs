@@ -205,17 +205,10 @@ function checkForLastPeriodName()
   }
 }
 
-<?php
 
 
-// =================================================================================
 
-// Extend the init() function 
-?>
-
-var oldInitEditAreaRoom = init;
-init = function() {
-  oldInitEditAreaRoom.apply(this);
+$(document).on('page_ready', function() {
   
   <?php
   // We need to hide the sections of the form relating to times
@@ -225,7 +218,7 @@ init = function() {
   // [This method works if there are no periods-specific settings.
   // When we get those we will have to do something different]
   ?>
-  $('input:radio[name=area_enable_periods]').click(function() {
+  $('input:radio[name=area_enable_periods]').on('click', function() {
       toggleMode('fast');
     });
   toggleMode(0);
@@ -243,17 +236,17 @@ init = function() {
   // name input field, clearing its contents.  Re-enable all the delete
   // icons because there must be more than one having added one.
   ?>
-  $('#add_period').click(function() {
+  $('#add_period').on('click', function() {
       var lastPeriodName = $('#period_settings .period_name').last(),
           clone = lastPeriodName.clone(true); <?php // duplicate data and events ?>
           
       clone.find('input').val('');
-      clone.insertAfter(lastPeriodName).find('input').focus();
+      clone.insertAfter(lastPeriodName).find('input').trigger('focus');
       $('.delete_period').show();
     });
   
   <?php // Delete a period name input field ?>  
-  $('.delete_period').click(function() {
+  $('.delete_period').on('click', function() {
       $(this).parent().remove();
       checkForLastPeriodName();
     });
@@ -264,7 +257,7 @@ init = function() {
   // disabled as appropriate.   Also trigger the change event when the page is loaded
   // so that the inputs are enabled/disabled correctly initially.
   ?>
-  $('.enabler').change(function(){
+  $('.enabler').on('change', function(){
       var enablerChecked = $(this).is(':checked');
       if ($(this).attr('id') === 'area_max_duration_enabled')
       {
@@ -276,16 +269,17 @@ init = function() {
         $(this).nextAll('input, select').prop('disabled', !enablerChecked);
       }
     })
-    .change();
+    .trigger('change');
   
   <?php // Disable the default duration if "All day" is checked. ?>
-  $('input[name="area_def_duration_all_day"]').change(function() {
+  $('input[name="area_def_duration_all_day"]').on('change', function() {
       $('#area_def_duration_mins').prop('disabled', $(this).prop('checked'));
-    }).change();
+    }).trigger('change');
   
   $('input[name="area_start_first_slot"], input[name="area_res_mins"]')
-      .change(function() {
+      .on('change', function() {
           generateLastSlotSelect();
         });
   generateLastSlotSelect();
-};
+  
+});

@@ -18,7 +18,7 @@ $vocab["admin"]              = "Admin";
 $vocab["help"]               = "Pomoč";
 $vocab["search"]             = "Išči";
 
-// Used in day.php
+// Used in index.php
 $vocab["bookingsfor"]        = "Rezervacija za";
 $vocab["bookingsforpost"]    = ""; // Goes after the date
 $vocab["areas"]              = "Področja";
@@ -26,8 +26,18 @@ $vocab["daybefore"]          = "Prejšnji dan";
 $vocab["dayafter"]           = "Naslednji dan";
 $vocab["gototoday"]          = "Danes";
 $vocab["goto"]               = "pojdi";
+$vocab["nav_day"]            = "Dan";
+$vocab["nav_week"]           = "Teden";
+$vocab["nav_month"]          = "Mesec";
 $vocab["highlight_line"]     = "Poudari to vrsto";
 $vocab["click_to_reserve"]   = "Za dodajanje rezervacije klikni na celico.";
+$vocab["weekbefore"]         = "Prejšni teden";
+$vocab["weekafter"]          = "Naslednji teden";
+$vocab["gotothisweek"]       = "Ta teden";
+$vocab["monthbefore"]        = "Prejšni mesec";
+$vocab["monthafter"]         = "Naslednji mesec";
+$vocab["gotothismonth"]      = "Ta mesec";
+$vocab["no_rooms_for_area"]  = "Ni definiranih prostorov v tem področju";
 
 // Used in trailer.inc
 $vocab["viewday"]            = "Pogled dan";
@@ -67,14 +77,10 @@ $vocab["rep_type_3"]         = "Mesečno";
 $vocab["rep_type_4"]         = "Letno";
 $vocab["rep_end_date"]       = "Datum konca ponavljanj";
 $vocab["rep_rep_day"]        = "Ponavljaj dni";
-$vocab["rep_freq"]           = "Frequenca";
-$vocab["rep_num_weeks"]      = "Število tednov ";
 $vocab["ctrl_click"]         = "Uporabite Ctrl+klik za izbiro več prostorov";
 $vocab["entryid"]            = "ID vnosa ";
 $vocab["repeat_id"]          = "ID ponavljanj"; 
-$vocab["you_have_not_entered"] = "Niste vnesli";
 $vocab["brief_description"]  = "kratek opis.";
-$vocab["useful_n-weekly_value"] = "prave vrednosti za n-tednov.";
 
 // Used in view_entry.php
 $vocab["description"]        = "Opis";
@@ -97,9 +103,9 @@ $vocab["returncal"]          = "Vrnitev na pogled koledarja";
 $vocab["failed_to_acquire"]  = "Napaka pri dostopu do baze";
 $vocab["invalid_booking"]    = "Napačna rezervacija";
 $vocab["must_set_description"] = "Vnesti morate kratek opis rezervacije. Prosimo vrnite se in jo vnesite.";
-$vocab["mail_subject_new_entry"]     = "Vnos dodan/spremenjen za vaš MRBS";
-$vocab["mail_subject_changed_entry"] = "Vnos dodan/spremenjen za vaš MRBS";
-$vocab["mail_subject_delete"]        = "Vnos za vaš MRBS je bil izbrisan";
+$vocab["mail_subject_new_entry"]     = "Vnos dodan/spremenjen za vaš MRBS"; // $mrbs_company
+$vocab["mail_subject_changed_entry"] = "Vnos dodan/spremenjen za vaš MRBS"; // $mrbs_company
+$vocab["mail_subject_delete"]        = "Vnos za vaš MRBS je bil izbrisan"; // $mrbs_company
 $vocab["mail_body_new_entry"]     = "Dodan je bil nov vnos in tukaj so podrobnosti:";
 $vocab["mail_body_changed_entry"] = "Vnos je bil spremenjen in tukaj so podrobnosti:";
 $vocab["mail_body_del_entry"]     = "Vnos je bil izbrisan in tukaj so podrobnosti:";
@@ -145,7 +151,6 @@ $vocab["of"]                 = " od ";
 $vocab["previous"]           = "Predhodni";
 $vocab["next"]               = "Naslednji";
 $vocab["entry"]              = "Vnos";
-$vocab["advanced_search"]    = "Napredno iskanje";
 $vocab["search_button"]      = "Išči";
 $vocab["search_for"]         = "Iskanje";
 $vocab["from"]               = "Od";
@@ -171,19 +176,6 @@ $vocab["total"]              = "Skupaj";
 $vocab["submitquery"]        = "Naredi poročilo";
 $vocab["sort_rep"]           = "Uredi poročilo po";
 $vocab["sort_rep_time"]      = "Začetni datum/ura";
-
-// Used in week.php
-$vocab["weekbefore"]         = "Prejšni teden";
-$vocab["weekafter"]          = "Naslednji teden";
-$vocab["gotothisweek"]       = "Ta teden";
-
-// Used in month.php
-$vocab["monthbefore"]        = "Prejšni mesec";
-$vocab["monthafter"]         = "Naslednji mesec";
-$vocab["gotothismonth"]      = "Ta mesec";
-
-// Used in {day week month}.php
-$vocab["no_rooms_for_area"]  = "Ni definiranih prostorov v tem področju";
 
 // Used in admin.php
 $vocab["edit"]               = "Uredi";

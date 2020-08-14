@@ -10,8 +10,8 @@ if ($use_strict)
 {
   echo "'use strict';\n";
 }
-
 ?>
+
 var isAdmin;
 
 <?php
@@ -68,6 +68,38 @@ var changeRepTypeDetails = function changeRepTypeDetails() {
       default:
         break;
     }
+  };
+
+
+<?php
+// Function to change the units for the repeat interval to match the repeat type.
+?>
+var changeRepIntervalUnits = function changeRepIntervalUnits() {
+    var repType = parseInt($('input[name="rep_type"]:checked').val(), 10);
+    var repInterval = parseInt($('input[name="rep_interval"]').val(), 10);
+    var units = $('#interval_units');
+    var text;
+    switch (repType)
+    {
+      case <?php echo REP_DAILY ?>:
+        text = (repInterval == 1) ? '<?php echo get_vocab('day') ?>' : '<?php echo get_vocab('days') ?>';
+        break;
+      case <?php echo REP_WEEKLY ?>:
+        text = (repInterval == 1) ? '<?php echo get_vocab('week') ?>' : '<?php echo get_vocab('weeks') ?>';
+        break;
+      case <?php echo REP_MONTHLY ?>:
+        text = (repInterval == 1) ? '<?php echo get_vocab('month') ?>' : '<?php echo get_vocab('months') ?>';
+        break;
+      case <?php echo REP_YEARLY ?>:
+        text = (repInterval == 1) ? '<?php echo get_vocab('year_lc') ?>' : '<?php echo get_vocab('years') ?>';
+        break;
+      default:
+        text = units.text();
+        break;
+    }
+    units.text(text);
+    
+    units.parent().toggle(repType !== <?php echo REP_NONE ?>);
   };
 
 
@@ -136,7 +168,7 @@ function checkTimeSlots(jqDate)
                   year: parseInt(siblings.filter('input[id*="year"]').val(), 10),
                   tz: areaConfig('timezone'),
                   slots: slots};
-    $.post('check_slot_ajax.php', params, function(result) {
+    $.post('ajax/check_slot.php', params, function(result) {
         $.each(result.slots, function(key, value) {
             $('#' + result.id).find('option[value="' + value + '"]').remove();
           });
@@ -180,11 +212,11 @@ function onAllDayClick()
     firstSlot = parseInt(startSelect.find('option').first().val(), 10);
     lastSlot = parseInt(endSelect.find('option').last().val(), 10);
     onAllDayClick.oldStart = parseInt(startSelect.val(), 10);
-    onAllDayClick.oldStartDatepicker = startDatepicker.datepicker('getDate');
+    onAllDayClick.oldStartDatepicker = startDatepicker.val();
     startSelect.val(firstSlot);
     startSelect.prop('disabled', true);
     onAllDayClick.oldEnd = parseInt(endSelect.val(), 10);
-    onAllDayClick.oldEndDatepicker = endDatepicker.datepicker('getDate');
+    onAllDayClick.oldEndDatepicker = endDatepicker.val();
     endSelect.val(lastSlot);
     if ((lastSlot < firstSlot) && 
         (onAllDayClick.oldStartDatepicker === onAllDayClick.oldEndDatepicker))
@@ -197,13 +229,13 @@ function onAllDayClick()
       {
         date = new Date(onAllDayClick.oldStartDatepicker);
         date.setDate(date.getDate() - 1);
-        startDatepicker.datepicker('setDate', date);
+        startDatepicker.val(date.toISOString().split('T')[0]);
       }
       else
       {
         date = new Date(onAllDayClick.oldEndDatepicker);
         date.setDate(date.getDate() + 1);
-        endDatepicker.datepicker('setDate', date);
+        endDatepicker.val(date.toISOString().split('T')[0]);
       }
     }
     endSelect.prop('disabled', true);
@@ -211,10 +243,10 @@ function onAllDayClick()
   else  <?php // restore the old values and re-enable the inputs ?>
   {
     startSelect.val(onAllDayClick.oldStart);
-    startDatepicker.datepicker('setDate', onAllDayClick.oldStartDatepicker);
+    startDatepicker.val(onAllDayClick.oldStartDatepicker);
     startSelect.prop('disabled', false);
     endSelect.val(onAllDayClick.oldEnd);
-    endDatepicker.datepicker('setDate', onAllDayClick.oldEndDatepicker);
+    endDatepicker.val(onAllDayClick.oldEndDatepicker);
     endSelect.prop('disabled', false);
   }
 
@@ -269,12 +301,11 @@ function validationMessages()
         {
           <?php
           // We define our own custom event called 'validate' that is triggered on the
-          // 'change' event for checkboxes and select elements, and the 'input' even
-          // for all others.   We cannot use the change event for text input because the
-          // change event is only triggered when the element loses focus and we want the
-          // validation to happen whenever a character is input.   And we cannot use the
-          // 'input' event for checkboxes or select elements because it is not triggered
-          // on them.
+          // 'change' and 'input' events.  We need both events because (a) the change event
+          // for text input is only triggered when the element loses focus and we want the
+          // validation to happen whenever a character is input, (b) autocomplete in some
+          // browsers, eg Firefox, does not trigger the input event and (c) the input event
+          // is not triggered for checkboxes or select elements.
           ?>
           $(field).on('validate', function(e) {
             <?php
@@ -287,12 +318,11 @@ function validationMessages()
               e.target.setCustomValidity(validationMessages.vocab[$(e.target).attr('id')]);
             }
           });
-          $(field).filter('select, [type="checkbox"]').on('change', function() {
+
+          $(field).on('change input', function() {
             $(this).trigger('validate');
           });
-          $(field).not('select, [type="checkbox"]').on('input', function() {
-            $(this).trigger('validate');
-          });
+
           <?php
           // When a form validation fails we need to clear the submit flag because
           // otherwise checkConflicts() won't do anything (because we don't check
@@ -426,15 +456,16 @@ function validate(form)
   }
   
   <?php
-  // Check that there's a sensible value for rep_num_weeks.   Only necessary
-  // if the browser doesn't support the HTML5 min and step attrubutes
+  // Check that there's a sensible value for rep_interval.   Only necessary
+  // if the browser doesn't support the HTML5 min and step attributes
   ?>
   if (!("min" in testInput) || !(("step" in testInput)))
   {
-    if ((form.find('input:radio[name=rep_type]:checked').val() === '<?php echo REP_WEEKLY ?>') &&
-        (form.find('#rep_num_weeks').val() < <?php echo REP_NUM_WEEKS_MIN ?>))
+    var repType = form.find('input:radio[name=rep_type]:checked').val();
+    
+    if ((repType !== <?php echo REP_NONE ?>) && (form.find('#rep_interval').val() < 1))
     {
-      window.alert("<?php echo escape_js(get_vocab('you_have_not_entered')) . '\n' . escape_js(get_vocab('useful_n-weekly_value')) ?>");
+      window.alert("<?php echo escape_js(get_vocab('invalid_rep_interval')) ?>");
       return false;
     }
   }
@@ -540,7 +571,7 @@ function checkConflicts(optional)
   ?>
   var timeout = 200; <?php // ms ?>
   window.setTimeout(function() {
-    var params = {'ajax': 1}; <?php // This is an Ajax request ?>
+    var params = {};
     var form = $('form#main');
     <?php
     // Don't do anything if (a) the form doesn't exist (which it won't if the user
@@ -664,7 +695,7 @@ vocab.minutes = {singular: '<?php echo escape_js(get_vocab("minute_lc")) ?>',
                  plural:   '<?php echo escape_js(get_vocab("minutes")) ?>'};
 vocab.hours   = {singular: '<?php echo escape_js(get_vocab("hour_lc")) ?>',
                  plural:   '<?php echo escape_js(get_vocab("hours")) ?>'};
-vocab.days    = {singular: '<?php echo escape_js(get_vocab("day_lc")) ?>',
+vocab.days    = {singular: '<?php echo escape_js(get_vocab("day")) ?>',
                  plural:   '<?php echo escape_js(get_vocab("days")) ?>'};
 
 
@@ -768,16 +799,15 @@ function getDateDifference()
 {
   var diff,
       secondsPerDay = <?php echo SECONDS_PER_DAY ?>,
-      start = $('#start_date_alt').val().split('-'),
+      start = $('#start_date').val().split('-'),
       startDate = new Date(parseInt(start[0], 10), 
                            parseInt(start[1], 10) - 1,
                            parseInt(start[2], 10),
                            12),
-      endDateAlt = $('#end_date_alt'),
-      end,
-      endDate;
+      endDate = $('#end_date'),
+      end;
       
-  if (endDateAlt.length === 0)
+  if (endDate.length === 0)
   {
     <?php
     // No end date selector, so assume the end date is
@@ -787,7 +817,7 @@ function getDateDifference()
   }
   else
   {
-    end = $('#end_date_alt').val().split('-'); 
+    end = endDate.val().split('-'); 
     endDate = new Date(parseInt(end[0], 10), 
                        parseInt(end[1], 10) - 1,
                        parseInt(end[2], 10),
@@ -1048,46 +1078,49 @@ function adjustSlotSelectors()
       // Limit the end slots to the maximum duration if that is enabled, if the
       // user is not an admin
       ?>
-      if (!isAdmin && maxDurationEnabled)
+      if (!isAdmin)
       {
-        <?php
-        // Calculate the duration in periods or seconds
-        ?>
-        duration =  thisValue - startValue;
-        if (enablePeriods)
+        if (maxDurationEnabled)
         {
-          duration = duration/60 + 1;  <?php // because of the way periods work ?>
-          duration += dateDifference * nPeriods;
-        }
-        else
-        {
-          duration += dateDifference * secondsPerDay;
-        }
-        maxDuration = (enablePeriods) ? maxDurationPeriods : maxDurationSecs;
-        if (duration > maxDuration)
-        {
-          if (i === 0)
+          <?php
+          // Calculate the duration in periods or seconds
+          ?>
+          duration =  thisValue - startValue;
+          if (enablePeriods)
           {
-            endSelect.append($(this).val(thisValue).text(nbsp));
-            var errorMessage = '<?php echo escape_js(get_vocab("max_booking_duration")) ?>' + nbsp;
-            if (enablePeriods)
-            {
-              errorMessage += maxDurationPeriods + nbsp;
-              errorMessage += (maxDurationPeriods > 1) ? vocab.periods.plural : vocab.periods.singular;
-            }
-            else
-            {
-              errorMessage += maxDurationQty + nbsp + maxDurationUnits;
-            }
-            $('#end_time_error').text(errorMessage);
+            duration = duration/60 + 1;  <?php // because of the way periods work ?>
+            duration += dateDifference * nPeriods;
           }
           else
           {
-            return false;
+            duration += dateDifference * secondsPerDay;
+          }
+          maxDuration = (enablePeriods) ? maxDurationPeriods : maxDurationSecs;
+          if (duration > maxDuration)
+          {
+            if (i === 0)
+            {
+              endSelect.append($(this).val(thisValue).text(nbsp));
+              var errorMessage = '<?php echo escape_js(get_vocab("max_booking_duration")) ?>' + nbsp;
+              if (enablePeriods)
+              {
+                errorMessage += maxDurationPeriods + nbsp;
+                errorMessage += (maxDurationPeriods > 1) ? vocab.periods.plural : vocab.periods.singular;
+              }
+              else
+              {
+                errorMessage += maxDurationQty + nbsp + maxDurationUnits;
+              }
+              $('#end_time_error').text(errorMessage);
+            }
+            else
+            {
+              return false;
+            }
           }
         }
       }
-      
+
       if ((thisValue > startValue) ||
           ((thisValue === startValue) && enablePeriods) ||
           (dateDifference !== 0))
@@ -1126,17 +1159,14 @@ var editEntryVisChanged = function editEntryVisChanged() {
     conflictTimer(true);
   };
 
-<?php
-// =================================================================================
 
-// Extend the init() function 
-?>
-
-var oldInitEditEntry = init;
-init = function(args) {
-  oldInitEditEntry.apply(this, [args]);
   
+$(document).on('page_ready', function() {
+ 
   isAdmin = args.isAdmin;
+  
+  <?php // Turn the create_by select into a fancy select box. ?>
+  $('select#create_by').mrbsSelect();
   
   <?php
   // If there's only one enabled area in the database there won't be an area
@@ -1160,7 +1190,7 @@ init = function(args) {
           $(this).data('current', $(this).val());
           $(this).data('previous', $(this).val());
         })
-      .change(function() {
+      .on('change', function() {
           updateSelectorData();
           reloadSlotSelector($(this), $('#area').val());
           adjustSlotSelectors();
@@ -1171,7 +1201,7 @@ init = function(args) {
   areaSelect
       .data('current', areaSelect.val())
       .data('previous', areaSelect.val())
-      .change(function() {
+      .on('change', function() {
           var newArea = $(this).val();
 
           updateSelectorData();
@@ -1193,7 +1223,7 @@ init = function(args) {
           adjustSlotSelectors(); 
         });
         
-  $('input[name="all_day"]').click(function() {
+  $('input[name="all_day"]').on('click', function() {
       onAllDayClick();
     });
     
@@ -1212,7 +1242,7 @@ init = function(args) {
   
   if (nameInput.length && !(nameInput.prop('disabled') || nameInput.val().length))
   {
-    nameInput.focus();
+    nameInput.trigger('focus');
   }
   
   adjustSlotSelectors();
@@ -1224,7 +1254,8 @@ init = function(args) {
   startSelect = form.find('#start_seconds');
   endSelect = form.find('#end_seconds');
   allDay = form.find('#all_day');
-  if ((allDay.is(':disabled') === false) && 
+  if (allDay.is(':visible') &&
+      (allDay.is(':disabled') === false) &&
       (startSelect.val() === startSelect.find('option').first().val()) &&
       (endSelect.val() === endSelect.find('option').last().val()))
   {
@@ -1233,8 +1264,8 @@ init = function(args) {
     endSelect.prop('disabled', true);
     onAllDayClick.oldStart = startSelect.val();
     onAllDayClick.oldEnd = endSelect.val();
-    onAllDayClick.oldStartDatepicker = form.find('#start_date').datepicker('getDate');
-    onAllDayClick.oldEndDatepicker = form.find('#end_date').datepicker('getDate');
+    onAllDayClick.oldStartDatepicker = form.find('#start_date').val();
+    onAllDayClick.oldEndDatepicker = form.find('#end_date').val();
   }
 
 
@@ -1253,7 +1284,7 @@ init = function(args) {
   // that the function that checks for a valid booking can see if the change was
   // triggered by a Submit button being pressed, and if so, not to send an Ajax request.
   ?>
-  form.find('[type="submit"], [type="button"], [type="image"]').click(function() {
+  form.find('[type="submit"], [type="button"], [type="image"]').on('click', function() {
     var trigger = $(this).attr('name');
     $(this).closest('form').data('submit', trigger);
   });
@@ -1287,11 +1318,11 @@ init = function(args) {
   ?>
   var formFields = $('form#main').find('input.date, [name]').not(':disabled, [type="submit"], [type="button"], [type="image"]');
   formFields.filter(':checkbox')
-            .click(function() {
+            .on('click', function() {
                 checkConflicts();
               });
   formFields.not(':checkbox')
-            .change(function() {
+            .on('change', function() {
                 checkConflicts();
               });
   
@@ -1317,7 +1348,7 @@ init = function(args) {
             .html(tabsHTML)
             .appendTo($('form#main'));
   
-  $('#conflict_check, #policy_check').click(function manageTabs() {
+  $('#conflict_check, #policy_check').on('click', function manageTabs() {
       var tabId,
           tabIndex,
           checkResults = $('#check_results'),
@@ -1386,7 +1417,7 @@ init = function(args) {
   <?php
   // Actions to take when the start and end datepickers are closed
   ?>
-  $('#start_date, #end_date').change(function() {
+  $('#start_date, #end_date').on('change', function() {
     
     <?php
     // (1) If the end_datepicker isn't visible and we change the start_datepicker,
@@ -1397,7 +1428,7 @@ init = function(args) {
     {
       if ($('#end_date').css('visibility') === 'hidden')
       {
-        $('#end_date_alt').val($('#start_date_alt').val());
+        $('#end_date').val($('#start_date').val());
       }
     }
     
@@ -1425,8 +1456,11 @@ init = function(args) {
       checkTimeSlots($(this));
     });
     
-  $('input[name="rep_type"]').change(changeRepTypeDetails);
+  $('input[name="rep_type"]').on('change', changeRepTypeDetails);
   changeRepTypeDetails();
+  
+  $('input[name="rep_interval"]').on('change', changeRepIntervalUnits);
+  $('input[name="rep_type"]').on('change', changeRepIntervalUnits).trigger('change');
   
   <?php
   // Add an event listener to detect a change in the visibility
@@ -1439,4 +1473,7 @@ init = function(args) {
   {
     document.addEventListener(prefix + "visibilitychange", editEntryVisChanged);
   }
-};
+  
+  form.removeClass('js_hidden');
+  
+});

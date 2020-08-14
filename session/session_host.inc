@@ -27,8 +27,10 @@ function authGet()
 
 function getUserName()
 {
-  global $REMOTE_ADDR;
-  $remotehostname = gethostbyaddr($REMOTE_ADDR);
+  global $server;
+  
+  $remotehostname = gethostbyaddr($server['REMOTE_ADDR']);
+  
   return $remotehostname;
 }
 

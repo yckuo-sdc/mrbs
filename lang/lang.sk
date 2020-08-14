@@ -20,7 +20,7 @@ $vocab["help"]               = "Nápoveda";
 $vocab["search"]             = "Hľadať";
 $vocab["outstanding"]        = "čakajúci na schválenie";
 
-// Used in day.php
+// Used in index.php
 $vocab["bookingsfor"]        = "Objednané pre";
 $vocab["bookingsforpost"]    = ""; // Goes after the date
 $vocab["areas"]              = "Oblasti";
@@ -28,9 +28,19 @@ $vocab["daybefore"]          = "Deň vzad";
 $vocab["dayafter"]           = "Deň vpred";
 $vocab["gototoday"]          = "Dnes";
 $vocab["goto"]               = "Prejsť na";
+$vocab["nav_day"]            = "Deň";
+$vocab["nav_week"]           = "Týždeň";
+$vocab["nav_month"]          = "Mesiac";
 $vocab["highlight_line"]     = "Označte tento riadok";
 $vocab["click_to_reserve"]   = "Klepnite na bunku, aby ste vykonali rezerváciu.";
 $vocab["timezone"]           = "Časová zóna";
+$vocab["weekbefore"]         = "Týždeň dozadu";
+$vocab["weekafter"]          = "Týždeň dopredu";
+$vocab["gotothisweek"]       = "Tento týždeň";
+$vocab["monthbefore"]        = "Mesiac dozadu";
+$vocab["monthafter"]         = "Mesiac dopredu";
+$vocab["gotothismonth"]      = "Tento mesiac";
+$vocab["no_rooms_for_area"]  = "Pre tento zdroj nie je definovaná žiadna oblasť!";
 
 // Used in trailer.inc
 $vocab["viewday"]            = "Dni";
@@ -60,9 +70,9 @@ $vocab["minute_lc"]          = "minúta";
 $vocab["minutes"]            = "minúty";
 $vocab["hour_lc"]            = "hodina";
 $vocab["hours"]              = "hodiny";
-$vocab["day_lc"]             = "deň";
+$vocab["day"]                = "deň";
 $vocab["days"]               = "dni";
-$vocab["week_lc"]            = "týždeň";
+$vocab["week"]               = "týždeň";
 $vocab["weeks"]              = "týždne";
 $vocab["year_lc"]            = "rok";
 $vocab["years"]              = "roky";
@@ -90,17 +100,14 @@ $vocab["ord_-4"]             = "štvrté od konca";
 $vocab["ord_-5"]             = "piate od konca";
 $vocab["rep_end_date"]       = "Dátum konca opakovania";
 $vocab["rep_rep_day"]        = "Deň opakovania";
-$vocab["rep_freq"]           = "Frekvencia";
-$vocab["rep_num_weeks"]      = "Opakovať každé";
+$vocab["rep_interval"]       = "Opakovať každé";
 $vocab["month_absolute"]     = "Deň";
 $vocab["month_relative"]     = "V";
 $vocab["skip_conflicts"]     = "Vynechať predchádzajúce konflikty";
 $vocab["ctrl_click"]         = "Použite Ctrl + klik pre výber viac áut";
 $vocab["entryid"]            = "ID záznamu";
 $vocab["repeat_id"]          = "ID opakovania"; 
-$vocab["you_have_not_entered"] = "Nevložili ste";
 $vocab["brief_description"]  = "Krátky popis.";
-$vocab["useful_n-weekly_value"] = "užitočná n-týždenná hodnota.";
 $vocab["status"]             = "Stav";
 $vocab["public"]             = "Verejný";
 $vocab["private"]            = "Súkromný";
@@ -161,10 +168,10 @@ $vocab["failed_to_acquire"]  = "Chyba pri zaisťování výhradného prístupu k
 $vocab["invalid_booking"]    = "Neplatná rezervácia";
 $vocab["must_set_description"] = "Musíte uviesť krátky popis rezervácie. Prosím choďte späť a vložte ho.";
 $vocab["no_rooms_selected"]    = "Musíte vybrať auto / miestnosť.";
-$vocab["mail_subject_approved"]  = "Záznam schválený pre $mrbs_company MRBS";
-$vocab["mail_subject_rejected"]  = "Záznam odmietnutý pre $mrbs_company MRBS";
-$vocab["mail_subject_more_info"] = "$mrbs_company MRBS: sú požadované ďalšie informácie";
-$vocab["mail_subject_reminder"]  = "Pripomenutie pre $mrbs_company MRBS";
+$vocab["mail_subject_approved"]  = "Záznam schválený pre %s MRBS"; // $mrbs_company
+$vocab["mail_subject_rejected"]  = "Záznam odmietnutý pre %s MRBS"; // $mrbs_company
+$vocab["mail_subject_more_info"] = "%s MRBS: sú požadované ďalšie informácie"; // $mrbs_company
+$vocab["mail_subject_reminder"]  = "Pripomenutie pre %s MRBS"; // $mrbs_company
 $vocab["mail_body_approved"]     = "Záznam bol schválený administrátorom; tu sú detaily:";
 $vocab["mail_body_rej_entry"]    = "Záznam bol odmietnutý administrátorom, tu sú detaily:";
 $vocab["mail_body_more_info"]    = "Administrátor požaduje viac informácií o rezervácii; tu sú detaily:";
@@ -172,15 +179,14 @@ $vocab["mail_body_reminder"]     = "Pripomenutie - záznam čaká na schválenie
 $vocab["mail_body_repeats_booked"]   = "Nasledujúcí dátum bol rezervovaný:";
 $vocab["mail_body_repeats_deleted"]  = "Nasledujúca rezervácia bola zmazaná:";
 $vocab["mail_body_exceptions"]       = "Nasledujúce dátumy nemôžu byť rezervované z dôvodu konfliktu:";
-$vocab["mail_subject_new_entry"]     = "Záznam pridaný pre $mrbs_company MRBS";
-$vocab["mail_subject_changed_entry"] = "Záznam zmenený pre $mrbs_company MRBS";
-$vocab["mail_subject_delete"]        = "Záznam zmazaný pre $mrbs_company MRBS";
+$vocab["mail_subject_new_entry"]     = "Záznam pridaný pre %s MRBS"; // $mrbs_company
+$vocab["mail_subject_changed_entry"] = "Záznam zmenený pre %s MRBS"; // $mrbs_company
+$vocab["mail_subject_delete"]        = "Záznam zmazaný pre %s MRBS"; // $mrbs_company
 $vocab["mail_body_new_entry"]     = "Byl vytvorený nový záznam, tu sú detaily:";
 $vocab["mail_body_changed_entry"] = "Záznam bol zmenený, tu sú detaily:";
 $vocab["mail_body_del_entry"]     = "Záznam bol zmazaný, tu sú detaily";
 $vocab["new_value"]           = "Nový";
 $vocab["old_value"]           = "Starý";
-$vocab["deleted_by"]          = "Zmazané";
 $vocab["reason"]              = "Dôvod";
 $vocab["info_requested"]      = "Požiadavka na uvedenie viac informácií";
 $vocab["min_time_before"]     = "Najmenší interval medzi aktuálnym časom a začiatkom rezervácie je";
@@ -199,7 +205,6 @@ $vocab["max_per_year_area"]       = "Maximálny počet rezervácií za rok na je
 $vocab["max_per_future_area"]     = "Maximálny počet nevyřízených rezervácií na uživateľa v tejto oblasti je";
 $vocab["skip_and_book"]           = "Vynechať a zarezerovať";
 $vocab["skip_and_book_note"]      = "Pokračovať v rezervácii, vynechať kolidujúce položky";
-$vocab["changes_saved"]           = "Zmeny uložené";
 
 // Used in pending.php
 $vocab["pending"]            = "Rezervácie čakajúce na schválenie";
@@ -221,7 +226,7 @@ $vocab["username_or_email"]  = "Prihlasovacie meno alebo e-mailová adresa";
 $vocab["database_login"]           = "Prihlašovacie meno pre databázu";
 $vocab["upgrade_required"]         = "Je treba vykonať upgrade databázy. Prosím zazálohujte databázu.";
 $vocab["supply_userpass"]          = "Prosím vyplňte meno a heslo k databáze (musí mať administrátorské práva).";
-$vocab["contact_admin"]            = "Pokiaľ nie ste administrátor rezervačného systému, prosím kontaktujte $mrbs_admin.";
+$vocab["contact_admin"]            = "Pokiaľ nie ste administrátor rezervačného systému, prosím kontaktujte %s."; // $mrbs_admin
 $vocab["upgrade_to_version"]       = "Upgrade databázy na verziu";
 $vocab["upgrade_to_local_version"] = "Upgrade databázy na lokánlnu verziu";
 $vocab["upgrade_completed"]        = "Upgrade databázy dokončený.";
@@ -269,7 +274,6 @@ $vocab["of"]                 = " o ";
 $vocab["previous"]           = "Predchádzajúci";
 $vocab["next"]               = "Ďalší";
 $vocab["entry"]              = "Záznam";
-$vocab["advanced_search"]    = "Rozšírené hľadanie";
 $vocab["search_button"]      = "Hľadať";
 $vocab["search_for"]         = "Hľadať čo";
 $vocab["from"]               = "Od";
@@ -318,19 +322,6 @@ $vocab["delete_entries_warning"] = "UPOZORNENIE! Vymaže všetky položky odpove
                                    "Celkový počet položiek, ktoré budú zmazané: ";
 $vocab["delete_entries_failed"] = "Položky nemôžu byť odstránené.";
 
-// Used in week.php
-$vocab["weekbefore"]         = "Týždeň dozadu";
-$vocab["weekafter"]          = "Týždeň dopredu";
-$vocab["gotothisweek"]       = "Tento týždeň";
-
-// Used in month.php
-$vocab["monthbefore"]        = "Mesiac dozadu";
-$vocab["monthafter"]         = "Mesiac dopredu";
-$vocab["gotothismonth"]      = "Tento mesiac";
-
-// Used in {day week month}.php
-$vocab["no_rooms_for_area"]  = "Pre tento zdroj nie je definovaná žiadna oblasť!";
-
 // Used in admin.php
 $vocab["edit"]               = "Upraviť";
 $vocab["delete"]             = "Zmazať";
@@ -367,7 +358,6 @@ $vocab["invalid_area"]            = "Neplatná oblasť!";
 $vocab["invalid_room_name"]       = "Toto meno zdroja už bolo použité v aktuálnej oblasti!";
 $vocab["invalid_email"]           = "Neplatná emailová adresa!";
 $vocab["invalid_resolution"]      = "Neplatná kombinácia prvej pozície, poslednej pozície a rozlíšenia!";
-$vocab["too_many_slots"]          = 'Je treba zvýšiť hodnotu $max_slots v konfiguračnom súbore!';
 $vocab["general_settings"]        = "Všeobecné";
 $vocab["time_settings"]           = "Časy pozícií";
 $vocab["confirmation_settings"]   = "Nastavenie potvrdzovania";
@@ -478,7 +468,6 @@ $vocab["invalid_RRULE"]               = "Neplatné RRULE: chýba časť FREQ";
 $vocab["more_than_one_BYDAY"]         = "MRBS nepodporuje viac než jednu hodnotu BYDAY v prípade, keď FREQ=";
 $vocab["BYDAY_equals_5"]              = "MRBS nepodporuje BYDAY hodnotu 5";
 $vocab["unsupported_FREQ"]            = "MRBS nepodporuje FREQ=";
-$vocab["unsupported_INTERVAL"]        = "MRBS nepodporuje INTERVAL>1 s FREQ=";
 $vocab["unsupported_COUNT"]           = "COUNT nie je podporovaný v MRBS";
 $vocab["no_indefinite_repeats"]       = "Neobmedzené opakovanie nie je podporované v MRBS";
 $vocab["events_imported"]             = "udalosti naimportované";

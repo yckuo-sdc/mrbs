@@ -111,10 +111,11 @@ function get_fieldset_general(array $data)
   // Area name
   $field = new FieldInputText();
   $field->setLabel(get_vocab('name'))
-        ->setControlAttributes(array('id'       => 'area_name',
-                                     'name'     => 'area_name',
-                                     'required' => true,
-                                     'value'    => $data['area_name']));
+        ->setControlAttributes(array('id'        => 'area_name',
+                                     'name'      => 'area_name',
+                                     'required'  => true,
+                                     'maxlength' => maxlength('area.area_name'),
+                                     'value'     => $data['area_name']));
   $fieldset->addElement($field);
   
   // Sort key
@@ -123,7 +124,8 @@ function get_fieldset_general(array $data)
         ->setLabelAttributes(array('title' => get_vocab('sort_key_note')))
         ->setControlAttributes(array('id'    => 'sort_key',
                                      'name'  => 'sort_key',
-                                     'value' => $data['sort_key']));
+                                     'value' => $data['sort_key'],
+                                     'maxlength' => maxlength('area.sort_key')));
   $fieldset->addElement($field);
                                      
   // Status - Enabled or Disabled
@@ -293,7 +295,8 @@ function get_fieldset_periods()
     $field->setAttribute('class', 'period_name')
           ->setControlAttributes(array('name'     => 'area_periods[]',
                                        'value'    => $period_name,
-                                       'required' => true))
+                                       'required' => true),
+                                 false)
           ->addElement($span);
     $fieldset->addElement($field);
   }
@@ -712,9 +715,9 @@ function get_fieldset_submit_buttons()
 
 
 // Check the user is authorised for this page
-checkAuthorised();
+checkAuthorised(this_page());
 
-print_header($day, $month, $year, isset($area) ? $area : null, isset($room) ? $room : null);
+print_header($view, $view_all, $year, $month, $day, isset($area) ? $area : null, isset($room) ? $room : null);
 
 // Get the details for this area
 if (!isset($area) || is_null($data = get_area_details($area)))
@@ -754,4 +757,4 @@ $form->addElement($outer_fieldset);
 $form->render();
 
 
-output_trailer();
+print_footer();

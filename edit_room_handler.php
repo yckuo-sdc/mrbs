@@ -9,19 +9,34 @@ use MRBS\Form\Form;
 Form::checkToken();
 
 // Check the user is authorised for this page
-checkAuthorised();
+checkAuthorised(this_page());
 
 // Get non-standard form variables
-$new_area = get_form_var('new_area', 'int');
-$old_area = get_form_var('old_area', 'int');
-$room_name = get_form_var('room_name', 'string');
-$room_disabled = get_form_var('room_disabled', 'string');
-$sort_key = get_form_var('sort_key', 'string');
-$old_room_name = get_form_var('old_room_name', 'string');
-$description = get_form_var('description', 'string');
-$capacity = get_form_var('capacity', 'int');
-$room_admin_email = get_form_var('room_admin_email', 'string');
-$custom_html = get_form_var('custom_html', 'string');  // Used for both area and room, but you only ever have one or the other
+$form_vars = array(
+  'new_area'         => 'int',
+  'old_area'         => 'int',
+  'room_name'        => 'string',
+  'sort_key'         => 'string',
+  'room_disabled'    => 'string',
+  'old_room_name'    => 'string',
+  'description'      => 'string',
+  'capacity'         => 'int',
+  'room_admin_email' => 'string',
+  'custom_html'      => 'string'
+);
+
+foreach($form_vars as $var => $var_type)
+{
+  $$var = get_form_var($var, $var_type);
+
+  // Trim the strings and truncate them to the maximum field length
+  if (is_string($$var))
+  {
+    $$var = trim($$var);
+    $$var = truncate($$var, "room.$var");
+  }
+
+}
 
 // Get the information about the fields in the room table
 $fields = db()->field_info($tbl_room);
@@ -56,6 +71,13 @@ foreach($fields as $field)
   {
     $$var = (empty($$var)) ? 0 : 1;
   }
+
+  // Trim any strings and truncate them to the maximum field length
+  if (is_string($$var) && ($field['nature'] != 'decimal'))
+  {
+    $$var = trim($$var);
+    $$var = truncate($$var, 'room.' . $field['name']);
+  }
 }
 
 if (empty($capacity))
@@ -72,7 +94,7 @@ if (empty($area))
   throw new \Exception('$area is empty');
 }
 
-// Intialise the error array
+// Initialise the error array
 $errors = array();
 
 // Clean up the address list replacing newlines by commas and removing duplicates
@@ -119,7 +141,6 @@ if (empty($errors))
     // Convert booleans into 0/1 (necessary for PostgreSQL)
     $room_disabled = (!empty($room_disabled)) ? 1 : 0;
     $sql = "UPDATE $tbl_room SET ";
-    $n_fields = count($fields);
     $sql_params = array();
     $assign_array = array();
     foreach ($fields as $field)
@@ -185,7 +206,7 @@ if (empty($errors))
         }
       }
     }
-    
+
     $sql .= implode(",", $assign_array) . " WHERE id=?";
     $sql_params[] = $room;
     db()->command($sql, $sql_params);

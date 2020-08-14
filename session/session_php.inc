@@ -26,18 +26,10 @@ require_once MRBS_ROOT . '/session/functions_session.inc';
  */
 function authGet()
 {
-  global $QUERY_STRING;
   global $returl;
 
   print_header();
-
-  echo "<p>".get_vocab("norights")."</p>\n";
-
-  $target_url = this_page();
-  if (isset($QUERY_STRING))
-  {
-    $target_url = $target_url . "?" . $QUERY_STRING;
-  }
+  $target_url = this_page(true);
   print_login_form(this_page(), $target_url, $returl);
 
   exit();
@@ -51,22 +43,14 @@ function getUserName()
     return $_SESSION["UserName"];
   }
 
-  return NULL;
+  return null;
 }
 
 
 // Print the logon entry on the top banner.
 function print_logon_box()
 {
-  global $QUERY_STRING;
-
-  $target_url = this_page();
-
-  if (isset($QUERY_STRING))
-  {
-    $target_url = $target_url . "?" . $QUERY_STRING;
-  }
-  
+  $target_url = this_page(true);
   $user=getUserName();
   
   if (isset($user))
@@ -76,11 +60,8 @@ function print_logon_box()
   }
   else
   {
-    print_unknown_user();
     print_logon_button($target_url);
   } 
-  
-  print_userlist_link();
 }
 
 
@@ -110,10 +91,9 @@ if (!empty($auth["session_php"]["inactivity_expire_time"]))
     unset($_SESSION["UserName"]);
   }
   // Ajax requests don't count as activity, unless it's the special Ajax request used
-  // to record client side activity
-  $ajax = get_form_var('ajax', 'int');
+  // to record client side activity.
   $activity = get_form_var('activity', 'int');
-  if ($activity || !$ajax || !isset($_SESSION['LastActivity']))
+  if ($activity || !is_ajax() || !isset($_SESSION['LastActivity']))
   {
     $_SESSION['LastActivity'] = time();
   }
@@ -149,8 +129,7 @@ if (isset($action))
       if (($valid_username = authValidateUser($username, $password)) === false)
       {
         print_header();
-        print_login_failed();
-        print_login_form(this_page(), $target_url, $returl);
+        print_login_form(this_page(), $target_url, $returl, get_vocab('unknown_user'));
         exit();
       }
       

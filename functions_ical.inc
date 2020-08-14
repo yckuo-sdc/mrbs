@@ -1,6 +1,8 @@
 <?php
 namespace MRBS;
 
+use MRBS\ICalendar\Series;
+
 global $timezone;
 
 // Get the VTIMEZONE component because we'll need it for creating events
@@ -16,7 +18,7 @@ function extract_vtimezone($vcalendar)
   // Would be simpler to use strstr() again, but the optional
   // third parameter was only introduced in PHP 5.3.0
   $pos = strpos($vtimezone, "END:VTIMEZONE");
-  if ($pos !== FALSE)
+  if ($pos !== false)
   {
     $vtimezone = substr($vtimezone, 0, $pos);
     if (!empty($vtimezone))
@@ -26,57 +28,6 @@ function extract_vtimezone($vcalendar)
     }
   }
   return '';  // There wasn't a VTIMEZONE component
-}
-
-
-// download the contents of the web page at $url and return it as a string
-// Returns the contents of the URL, or else FALSE on failure
-function download($url)
-{
-  global $proxy;
-  
-  $connect_timeout  = 2;  // seconds
-  $transfer_timeout = 2;  // seconds
-  $curlopt_timeout  = 3;  // seconds
-
-  // If we can we use cURL to download the page because it allows us to
-  // set a timeout on establishing a connection as well as on the transfer time.
-  // (We can only set a timeout on transfer time with file_get_contents()).  The
-  // connection timeout is important because MRBS may be being used in sites
-  // where direct access to the internet is not allowed.
-  if (function_exists('curl_init'))
-  {
-    $ch = curl_init($url);
-    curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, $connect_timeout);
-    curl_setopt($ch, CURLOPT_LOW_SPEED_TIME, $transfer_timeout);
-    curl_setopt($ch, CURLOPT_TIMEOUT, $curlopt_timeout);
-    curl_setopt($ch, CURLOPT_RETURNTRANSFER, TRUE);
-    $contents = curl_exec($ch);
-    if ($contents === FALSE)
-    {
-      trigger_error(curl_error($ch), E_USER_WARNING);
-    }
-    curl_close($ch);
-  }
-  
-  // If there's no cURL then use file_get_contents()
-  else
-  {
-    // Create the stream context so that we can (a) make sure the connection is closed,
-    // because file_get_contents() does not return the contents when all the bytes
-    // have been sent, but when the connection is closed and (b) set a timeout in case
-    // the transfer is slow
-    $context = stream_context_create(array('http' => array('header'=>'Connection: close',
-                                                           'timeout' => $transfer_timeout)));
-    // Suppress any timeout warnings
-    $contents = @file_get_contents($url);
-    if ($contents === FALSE)
-    {
-      trigger_error("MRBS: could not get contents of $url", E_USER_WARNING);
-    }
-  }
-  
-  return $contents;
 }
 
 
@@ -90,23 +41,23 @@ function download($url)
 function get_vtimezone($tz)
 {
   global $tbl_zoneinfo, $zoneinfo_update, $zoneinfo_expiry, $zoneinfo_outlook_compatible;
-  
-  $tz_dir = ($zoneinfo_outlook_compatible) ? TZDIR_OUTLOOK : TZDIR;  
+
+  $tz_dir = ($zoneinfo_outlook_compatible) ? TZDIR_OUTLOOK : TZDIR;
   $tz_file = "$tz_dir/$tz.ics";  // A fallback for a VTIMEZONE definition
-  
-  $vtimezone = FALSE;  // Default value in case we don't find one
-  
+
+  $vtimezone = false;  // Default value in case we don't find one
+
   // Convert booleans into 1 or 0 (necessary for the database)
   $zoneinfo_outlook_compatible = ($zoneinfo_outlook_compatible) ? 1 : 0;
-  
-  // Acquire a mutex to lock out others who might be accessing 
+
+  // Acquire a mutex to lock out others who might be accessing
   // the table, to stop somebody inserting a record at the same
   // time as us (we want just one entry per timezone)
   if (!db()->mutex_lock($tbl_zoneinfo))
   {
     fatal_error(get_vocab("failed_to_acquire"));
   }
-  
+
   // Look and see if there's a component in the database
   $sql = "SELECT vtimezone, last_updated
             FROM $tbl_zoneinfo
@@ -119,7 +70,7 @@ function get_vtimezone($tz)
   {
     // If there's something in the database and it hasn't expired, then
     // that's it.
-    $row = $res->row_keyed(0);
+    $row = $res->next_row_keyed();
     $vtimezone = $row['vtimezone'];
     if ($zoneinfo_update && ((time() - $row['last_updated']) >= $zoneinfo_expiry))
     {
@@ -139,10 +90,10 @@ function get_vtimezone($tz)
           $tz_url = substr($property, 6);  // 6 is the length of "TZURL:"
         }
       }
-      
-      $vcalendar = download($tz_url);
-      
-      if ($vcalendar === FALSE)
+
+      $vcalendar = url_get_contents($tz_url);
+
+      if ($vcalendar === false)
       {
         trigger_error("MRBS: failed to download a new timezone definition from $tz_url", E_USER_WARNING);
       }
@@ -180,7 +131,7 @@ function get_vtimezone($tz)
   elseif (is_readable($tz_file))
   {
     $vcalendar = file_get_contents($tz_file);
-    
+
     if ($vcalendar)
     {
       $vtimezone = extract_vtimezone($vcalendar);
@@ -213,10 +164,10 @@ function get_time($value)
   {
     $this_timezone = "UTC";
   }
-  
+
   $value_type = "DATE_TIME";  // the default
 
-  
+
   // Work out which, if any, parameters have been set
   if (isset($params))
   {
@@ -233,8 +184,8 @@ function get_time($value)
       }
     }
   }
-  
-  if (strpos($value, 'Z') !== FALSE)
+
+  if (strpos($value, 'Z') !== false)
   {
     $value = str_replace('Z', '', $value);
     $this_timezone = 'UTC';
@@ -285,11 +236,11 @@ function get_time($value)
 function get_create_by($organizer)
 {
   global $auth, $mail_settings, $tbl_users;
-  
+
   // Get the email address.   Stripping off the 'mailto' is a very simplistic
   // method.  It will work in the majority of cases, but this needs to be improved
   $email = preg_replace('/^mailto:/', '', $organizer);
-  
+
   // If we're using the 'db' auth rtpe, then look the username up in the users table
   if ($auth['type'] == 'db')
   {
@@ -298,7 +249,7 @@ function get_create_by($organizer)
 
     if ($res->count() == 0)
     {
-      return NULL;
+      return null;
     }
     else
     {
@@ -307,7 +258,7 @@ function get_create_by($organizer)
         // Could maybe do something better here
         trigger_error("ORGANIZER email address not unique", E_USER_NOTICE);
       }
-      $row = $res->row_keyed(0);
+      $row = $res->next_row_keyed();
       return $row['name'];
     }
   }
@@ -316,7 +267,7 @@ function get_create_by($organizer)
   {
     // We need a function that is the inverse of authLdapGetEmail()
     trigger_error("Cannot yet get username when using LDAP", E_USER_WARNING);
-    return NULL;
+    return null;
   }
   // Otherwise we derive the username from the email address
   else
@@ -337,7 +288,7 @@ function get_create_by($organizer)
 function get_rep_opt($byday_days)
 {
   global $RFC_5545_days;
-  
+
   $rep_opt = '';
   foreach ($RFC_5545_days as $day)
   {
@@ -348,16 +299,16 @@ function get_rep_opt($byday_days)
 
 
 // Given an RFC 5545 recurrence rule, returns an array giving the MRBS repeat
-// details.   Indexed by rep_type, rep_num_weeks, rep_opt, end_date
-// Returns FALSE on failure with error messahes being returned in the array $errors
+// details.   Indexed by rep_type, rep_interval, rep_opt, end_date
+// Returns FALSE on failure with error messages being returned in the array $errors
 function get_repeat_details($rrule, $start_time, &$errors)
 {
   global $RFC_5545_days;
-  
+
   // Set up the result array with safe defaults
   $result = array('rep_type' => REP_NONE,
                   'rep_opt' => '0000000',
-                  'rep_num_weeks' => 0,
+                  'rep_interval' => 1,
                   'end_date' => 0);
   $rules = array();
   $recur_rule_parts = explode(';', $rrule);
@@ -371,7 +322,7 @@ function get_repeat_details($rrule, $start_time, &$errors)
   {
     $errors[] = get_vocab("invalid_RRULE");
   }
-  
+
   switch ($rules['FREQ'])
   {
     case 'DAILY':
@@ -379,14 +330,6 @@ function get_repeat_details($rrule, $start_time, &$errors)
       break;
     case 'WEEKLY':
       $result['rep_type'] = REP_WEEKLY;
-      if (isset($rules['interval']) && ($rules['interval'] > 1))
-      {
-        $result['rep_num_weeks'] = $rules['interval'];
-      }
-      else
-      {
-        $result['rep_num_weeks'] = 1;
-      }
       if (isset($rules['BYDAY']))
       {
         $byday_days = explode(',', $rules['BYDAY']);
@@ -416,7 +359,7 @@ function get_repeat_details($rrule, $start_time, &$errors)
         {
           $day = substr($byday_day, -2);     // the last two characters of the string
           $nth = substr($byday_day, 0, -2);  // everything except the last two characters
-          if ($nth === FALSE)
+          if ($nth === false)
           {
             // "If an integer modifier is not present, it means all days of this
             // type within the specified frequency.  For example, within a MONTHLY
@@ -443,13 +386,16 @@ function get_repeat_details($rrule, $start_time, &$errors)
       $errors[] = get_vocab("unsupported_FREQ") . $rules['FREQ'];
       break;
   }
-  
-  if (isset($rules['interval']) && ($rules['interval'] > 1) && 
-      !in_array($rules['FREQ'], array('WEEKLY')))
+
+  if (isset($rules['interval']) && ($rules['interval'] > 1))
   {
-    $errors[] = get_vocab("unsupported_INTERVAL") . $rules['FREQ'];
+    $result['rep_interval'] = $rules['interval'];
   }
-  
+  else
+  {
+    $result['rep_interval'] = 1;
+  }
+
   if (isset($rules['UNTIL']))
   {
     // Strictly speaking "the value of the UNTIL rule part MUST have the same
@@ -469,8 +415,8 @@ function get_repeat_details($rrule, $start_time, &$errors)
   {
     $errors[] = get_vocab("no_indefinite_repeats");
   }
-  
-  return (empty($errors)) ? $result: FALSE;
+
+  return (empty($errors)) ? $result : false;
 }
 
 
@@ -485,9 +431,9 @@ function get_repeat_details($rrule, $start_time, &$errors)
 // single linear white-space character is ignored (i.e., removed) when
 // processing the content type."  (RFC 5545)
 function ical_fold($str)
-{ 
+{
   $line_split = "\r\n ";  // The RFC also allows a tab instead of a space
-  
+
   // We assume that we are using UTF-8 and therefore that a space character
   // is one octet long.   If we ever switched for some reason to using for
   // example UTF-16 this assumption would be invalid.
@@ -498,11 +444,11 @@ function ical_fold($str)
   $space_octets = 1;
 
   $octets_max = 75;
-  
+
   $result = '';
   $octets = 0;
   $byte_index = 0;
-  
+
   while (isset($byte_index))
   {
     // Get the next character
@@ -558,17 +504,17 @@ function ical_unfold($str)
   // Deal with the trivial cases
   if (!isset($str))
   {
-    return NULL;
+    return null;
   }
   if ($str == '')
   {
     return $str;
   }
-  
+
   // We've got a non-zero length string
   $result = '';
   $byte_index = 0;
-  
+
   while (isset($byte_index))
   {
     // Get the next character
@@ -598,7 +544,7 @@ function ical_unfold($str)
       $result .= $char;
     }
   }
-  
+
   return $result;
 }
 
@@ -647,7 +593,7 @@ function ical_escape_quoted_string($str)
 
   //    QSAFE-CHAR    = WSP / %x21 / %x23-7E / NON-US-ASCII
   //    ; Any character except CONTROL and DQUOTE
-  
+
   // We'll just get rid of any double quotes, replacing them with a space.
   // (There is no way of escaping double quotes)
   $str = str_replace('"', ' ', $str);
@@ -663,14 +609,14 @@ function ical_unescape_quoted_string($str)
 
 // Splits a string at the first colon or semicolon (the delimiter) unless the delimiter
 // is inside a quoted string.  Used for parsing iCalendar lines to get property parameters
-// It assumes the string will always have at least one more delimiter to come, so can 
+// It assumes the string will always have at least one more delimiter to come, so can
 // only be used when you know you've still got the colon to come.
 //
 // Returns an array of three elements (the second is the delimiter)
 // or just one element if the delimiter is not found
 function ical_split($string)
 {
-  // We want to split the string up to the first delimiter whch isn't inside a quoted
+  // We want to split the string up to the first delimiter which isn't inside a quoted
   // string.   So the look ahead must not contain exactly one double quote before the next
   // delimiter.   Note that (a) you cannot escape double quotes inside a quoted string, so we
   // we don't have to worry about that complication (b) we assume there will always be a
@@ -699,7 +645,7 @@ function parse_ical_property($line)
   if ($tmp[1] != ':')
   {
     // Get all the property parameters
-    do 
+    do
     {
       $tmp = ical_split($tmp[2]);
       list($param_name, $param_value) = explode('=', $tmp[0], 2);
@@ -720,30 +666,23 @@ function create_rrule($data)
   global $RFC_5545_days;
 
   $rule = '';
-  if (!isset($data['rep_type']))
+
+  if (!isset($data['rep_type']) || ($data['rep_type'] === REP_NONE))
   {
     return $rule;
   }
+
   switch($data['rep_type'])
   {
-    case REP_NONE:
-      return $rule;
-      break;
-      
     case REP_DAILY:
       $rule .= "FREQ=DAILY";
       break;
-      
+
     case REP_WEEKLY:
       $rule .= "FREQ=WEEKLY";
-      // Interval for WEEKLY (Interval defaults to 1)
-      if ($data['rep_num_weeks'] > 1)
-      {
-        $rule .= ";INTERVAL=" . $data['rep_num_weeks'];
-      }
       // Get the repeat days of the week
       $days_of_week = array();
-      for ($i = 0; $i < 7; $i++)
+      for ($i = 0; $i < DAYS_PER_WEEK; $i++)
       {
         if ($data['rep_opt'][$i])
         {
@@ -756,7 +695,7 @@ function create_rrule($data)
         $rule .= ";BYDAY=$dow_list";
       }
       break;
-      
+
     case REP_MONTHLY:
       $rule .= "FREQ=MONTHLY";
       if (isset($data['month_absolute']))
@@ -772,11 +711,18 @@ function create_rrule($data)
         trigger_error("Unknown monthly repeat type, E_USER_NOTICE");
       }
       break;
-      
+
     case REP_YEARLY:
       $rule .= "FREQ=YEARLY";
       break;
   }
+
+  // The interval (if necessary)
+  if ($data['rep_interval'] > 1)
+  {
+    $rule .= ";INTERVAL=" . $data['rep_interval'];
+  }
+
   // The UNTIL date-time "MUST be specified in UTC time"
   $rule .= ";UNTIL=" . gmdate(RFC5545_FORMAT . '\Z', $data['end_date']);
 
@@ -788,13 +734,13 @@ function create_rrule($data)
 // The TZID parameter if used must be added separately
 function create_exdate_list($dates)
 {
-  global $vtimezone, $timezone;
-  
+  global $vtimezone;
+
   $results = array();
-  
+
   foreach ($dates as $date)
   {
-    if ($vtimezone === FALSE)
+    if ($vtimezone === false)
     {
       $results[] = gmdate(RFC5545_FORMAT . '\Z', $date);
     }
@@ -808,15 +754,13 @@ function create_exdate_list($dates)
 
 
 // Create an RFC 5545 iCalendar Event component
-function create_ical_event($method, $data, $addresses=NULL, $series=FALSE)
+function create_ical_event($method, $data, $addresses=null, $series=false)
 {
   require_once "functions_mail.inc";
-  
-  global $confirmation_enabled, $mail_settings, $timezone, $vtimezone,
+
+  global $mail_settings, $timezone, $vtimezone,
          $default_area_room_delimiter;
-  
-  $use_html = $mail_settings['html'] && !empty($html_description);
-  
+
   $results = array();
 
   $results[] = "BEGIN:VEVENT";
@@ -824,7 +768,7 @@ function create_ical_event($method, $data, $addresses=NULL, $series=FALSE)
   $results[] = "DTSTAMP:" . gmdate(RFC5545_FORMAT . '\Z');  // compulsory
   $last_modified = empty($data['last_updated']) ? time() : $data['last_updated'];
   $results[] = "LAST-MODIFIED:" . gmdate(RFC5545_FORMAT . '\Z', $last_modified);
-  
+
 
   // Note: we try and write the event times in the format of a local time with
   // a timezone reference (ie RFC 5545 Form #3).   Only if we can't do that do we
@@ -837,12 +781,12 @@ function create_ical_event($method, $data, $addresses=NULL, $series=FALSE)
   // VTIMEZONE component must be provided (this is done in create_icalendar() ).  Some
   // applications will work without the VTIMEZONE component, but many follow the
   // standard and do require it.  Here is an extract from RFC 2445:
-  
-  // 'When used with a recurrence rule, the "DTSTART" and "DTEND" properties MUST be 
+
+  // 'When used with a recurrence rule, the "DTSTART" and "DTEND" properties MUST be
   // specified in local time and the appropriate set of "VTIMEZONE" calendar components
-  // MUST be included.' 
-  
-  if ($vtimezone === FALSE)
+  // MUST be included.'
+
+  if ($vtimezone === false)
   {
     $results[] = "DTSTART:" . gmdate(RFC5545_FORMAT . '\Z', $data['start_time']);
     $results[] = "DTEND:" . gmdate(RFC5545_FORMAT . '\Z', $data['end_time']);
@@ -852,14 +796,14 @@ function create_ical_event($method, $data, $addresses=NULL, $series=FALSE)
     $results[] = "DTSTART;TZID=$timezone:" . date(RFC5545_FORMAT, $data['start_time']);
     $results[] = "DTEND;TZID=$timezone:" . date(RFC5545_FORMAT, $data['end_time']);
   }
-  
+
   if ($series)
   {
     $results[] = "RRULE:" . create_rrule($data);
     if (!empty($data['skip_list']))
     {
-      $results[] = "EXDATE" . 
-                   (($vtimezone === FALSE) ? ":" : ";TZID=$timezone:") .
+      $results[] = "EXDATE" .
+                   (($vtimezone === false) ? ":" : ";TZID=$timezone:") .
                    create_exdate_list($data['skip_list']);
     }
   }
@@ -885,17 +829,17 @@ function create_ical_event($method, $data, $addresses=NULL, $series=FALSE)
   }
   else
   {
-    $results[] = "STATUS:" . (($data['tentative']) ? "TENTATIVE" : "CONFIRMED");
+    $results[] = "STATUS:" . ((empty($data['tentative'])) ? "CONFIRMED" : "TENTATIVE");
   }
-  
-  /*  
+
+  /*
   Class is commented out for the moment.  To be useful it probably needs to go
   hand in hand with an ORGANIZER, otherwise people won't be able to see their own
   bookings
   // CLASS
   $results[] = "CLASS:" . (($data['private']) ? "PRIVATE" : "PUBLIC");
   */
-  
+
   // ORGANIZER
   // The organizer is MRBS.   We don't make the create_by user the organizer because there
   // are some mail systems such as IBM Domino that silently discard the email notification
@@ -907,15 +851,15 @@ function create_ical_event($method, $data, $addresses=NULL, $series=FALSE)
   {
     $organizer['common_name'] = get_mail_vocab('mrbs');
   }
-  
+
   if (!empty($organizer['address']))
   {
     $results[] = "ORGANIZER;CN=\"" . ical_escape_quoted_string($organizer['common_name']) . "\":mailto:" . $organizer['address'];
   }
-  
+
   // Put the people on the "to" list as required participants and those on the cc
   // list as non particpants.   In theory the email client can then decide whether
-  // to enter the booking automaticaly on the user's calendar - although at the
+  // to enter the booking automatically on the user's calendar - although at the
   // time of writing (Dec 2010) there don't seem to be any that do so!
   if (!empty($addresses))
   {
@@ -960,20 +904,20 @@ function create_ical_event($method, $data, $addresses=NULL, $series=FALSE)
   }
 
   $results[] = "END:VEVENT";
-  
+
   $result = implode(ICAL_EOL, $results);  // No CRLF at end: that will be added later
-  
+
   return $result;
 }
 
 
 // Creates an iCalendar object in RFC 5545 format
 //    $method      string   the RFC 5545 METHOD (eg "REQUEST", "PUBLISH", "CANCEL")
-//    $components  array    an array of iCalendar components, each a string  
+//    $components  array    an array of iCalendar components, each a string
 function create_icalendar($method, $components)
 {
   require_once "version.inc";
-  
+
   global $vtimezone;
 
   $results = array();
@@ -984,14 +928,14 @@ function create_icalendar($method, $components)
   // Optional properties
   $results[] = "CALSCALE:GREGORIAN";
   $results[] = "METHOD:$method";
-  
+
   // Add in the VTIMEZONE component if there is one (see the comment in
   // create_ical_event() above)
   if ($vtimezone)
   {
     $results[] = $vtimezone;
   }
-  
+
   // Add in each component
   foreach ($components as $component)
   {
@@ -999,12 +943,12 @@ function create_icalendar($method, $components)
   }
 
   $results[] = "END:VCALENDAR";
-  
+
   $result = implode(ICAL_EOL, $results);
   $result .= ICAL_EOL;  // Has to end with a CRLF
-  
+
   $result = ical_fold($result);
-  
+
   return $result;
 }
 
@@ -1013,21 +957,21 @@ function create_icalendar($method, $components)
 //
 //    &$res       resource  the result of an SQL query on the entry table, which
 //                          has been sorted by repeat_id, ical_recur_id (both ascending).
-//                          As well as all the fields in the entry table, the rows will 
+//                          As well as all the fields in the entry table, the rows will
 //                          also contain the area name, the room name and the repeat
-//                          details (rep_type, end_date, rep_opt, rep_num_weeks)
+//                          details (rep_type, end_date, rep_opt, rep_interval)
 //    $export_end int       a Unix timestamp giving the end limit for the export
-function export_icalendar(&$res, $keep_private, $export_end=PHP_INT_MAX)
+function export_icalendar(DBStatement $res, $keep_private, $export_end=PHP_INT_MAX)
 {
   require_once "functions_view.inc";
   require_once "mrbs_sql.inc";
-  
+
   // We construct an iCalendar by going through the rows from the SQL query.  Because
   // it was sorted by repeat_id and then by ical_recur_id we will
   //    - get all the individual entries (which will not have a rep_type)
   //    - then get the series.    For each series we have to:
   //        - identify the series information.   This is the original series information
-  //          so we can only get it from an entry that has not been changed, ie has 
+  //          so we can only get it from an entry that has not been changed, ie has
   //          entry_type == ENTRY_RPT_ORIGINAL.   If there isn't one of these then it
   //          does not matter, because every entry will have been changed and so there
   //          is no need for the original data. [Note: another way of getting the
@@ -1039,131 +983,63 @@ function export_icalendar(&$res, $keep_private, $export_end=PHP_INT_MAX)
   //          should be there and we can tell from the recurrence-id the events that
   //          are actually there.   We can then issue cancellations for the missing
   //          events.
-  
+
   // We use PUBLISH rather than REQUEST because we're not inviting people to these meetings,
   // we're just exporting the calendar.   Furthermore if we don't use PUBLISH then some
   // calendar apps (eg Outlook, at least 2010 and 2013) won't open the full calendar.
   $method = "PUBLISH";
-  
+
   // Initialize an array to hold the events and a variable to keep track
   // of the last repeat id we've seen
   $ical_events = array();
   $n_rows = $res->count();
-  
-  for ($i = 0; ($row = $res->row_keyed($i)); $i++)
+
+  for ($i=0; (false !== ($row = $res->next_row_keyed())); $i++)
   {
+    unpack_status($row);
     // If this is an individual entry, then construct an event
     if (!isset($row['rep_type']) || ($row['rep_type'] == REP_NONE))
     {
       $ical_events[] = create_ical_event($method, $row);
     }
+
     // Otherwise it's a series
     else
     {
-      // If this is the first row in a series
-      if (!isset($actual_entries))
+      // If we haven't started a series, then start one
+      if (!isset($series))
       {
-        // Initialise for the new series
-        $last_repeat_id = $row['repeat_id'];
-        unset($replace_index);
-        // We need to set the repeat start and end dates because we've only been
-        // asked to export dates in the report range.  The end date will be the earlier
-        // of the series end date and the report end date.  The start date of the series
-        // will be the recurrence-id of the first entry in the series, which is this one
-        // thanks to the SQL query which ordered the entries by recurrence-id.
-        $start_row = $row;  // Make a copy of the data because we are going to tweak it.
-        $start_row['end_date'] = min($export_end, $start_row['end_date']);
-        $duration = $start_row['end_time'] - $start_row['start_time'];
-        $start_row['start_time'] = strtotime($row['ical_recur_id']);
-        $start_row['end_time'] = $start_row['start_time'] + $duration;
-        // However, if this is a series member that has been changed, then we 
-        // cannot trust the rest of the data (eg the description).   We will
-        // use this data for now in case we don't get anything better, but we
-        // will make a note that we really need an unchanged member of the series, 
-        // which will have the correct data for the series which we can use to
-        // replace this event.   (Of course, if we don't get an unchanged member
-        // then it doesn't matter because all the original members will have been
-        // changed and so there's no longer any need for the original data.)
-        if ($row['entry_type'] == ENTRY_RPT_CHANGED)
+        $series = new Series($row, $export_end);
+      }
+
+      // Otherwise, if this row is a member of the current series, add the row to the series
+      elseif ($row['repeat_id'] == $series->repeat_id)
+      {
+        $series->addRow($row);
+      }
+
+      // If it's a series that we haven't seen yet, or we've got no more
+      // rows then process the series
+      if (($row['repeat_id'] != $series->repeat_id) || ($i == $n_rows - 1))
+      {
+        $ical_events = array_merge($ical_events, $series->toEvents($method));
+        // If we're at the start of a new series then create a new series
+        if ($row['repeat_id'] != $series->repeat_id)
         {
-          // Record the index number of the event that needs to be replaced.
-          // As we have not yet added that event to the array, it will be
-          // the current length of the array.
-          $replace_index = count($ical_events);
-        }
-        // Construct an array of the entries we'd expect to see in this series so that
-        // we can check whether any are missing and if so set their status to cancelled.
-        // (We use PHP_INT_MAX rather than $max_rep_entrys because $max_rep_entrys may
-        // have changed since the series was created.)
-        $rep_details = array();
-        foreach (array('rep_type', 'rep_opt', 'rep_num_weeks', 'month_absolute', 'month_relative') as $key)
-        {
-          if (isset($start_row[$key]))
+          $series = new Series($row, $export_end);
+          // And if this is the last row, ie the only member of the new series
+          // then process the new series
+          if ($i == $n_rows - 1)
           {
-            $rep_details[$key] = $start_row[$key];
+            $ical_events = array_merge($ical_events, $series->toEvents($method));
           }
         }
-        
-        $expected_entries = mrbsGetRepeatEntryList($start_row['start_time'], 
-                                                   $start_row['end_date'],
-                                                   $rep_details,
-                                                   PHP_INT_MAX);
-                                                   
-        // And keep an array of all the entries we actually see
-        $actual_entries = array();
+
       }
-      
-      // If this row is a member of the current series
-      if ($row['repeat_id'] == $last_repeat_id)
-      {
-        // Add this entry to the array of ones we've seen
-        $actual_entries[] = strtotime($row['ical_recur_id']);
-        // And if it's a series member that has been altered
-        if ($row['entry_type'] == ENTRY_RPT_CHANGED)
-        {
-          $ical_events[] = create_ical_event($method, $row);
-        }
-        // Otherwise it must be an original member, in which case check
-        // to see if we were looking out for one
-        elseif (isset($replace_index))
-        {
-          // Use this row to define the sequence as it has got all the original
-          // data, except that we need to change the start and end times, keeping
-          // the original duration.   We get the start time from the recurrence
-          // id of the first member of the series, which we saved earlier on.
-          $duration = $row['end_time'] - $row['start_time'];
-          $row['start_time'] = $start_row['start_time'];
-          $row['end_time'] = $row['start_time'] + $duration;
-          $row['end_date'] = min($export_end, $row['end_date']);
-          $ical_events[$replace_index] = create_ical_event($method, $row, NULL, TRUE);
-          // Clear the $replace_index now that we've found an original entry
-          unset ($replace_index);
-        }
-      }
-      
-      
-      // If it's a series that we haven't seen yet, or we've got no more
-      // rows then construct an event
-      if (($row['repeat_id'] != $last_repeat_id) || ($i == $n_rows - 1))
-      {
-        $start_row['skip_list'] = array_diff($expected_entries, $actual_entries);
-        // Create the series event
-        $ical_events[] = create_ical_event($method, $start_row, NULL, TRUE);
-        
-        // If we're at the start of a new series, then rewind one and
-        // clear the actual entries
-        if ($i < ($n_rows - 1))
-        {
-          $i--;
-          unset ($actual_entries);
-        }
-      }
-      
     }
   }
-  
+
   // Build the iCalendar from the array of events and output it
   $icalendar = create_icalendar($method, $ical_events);
   echo $icalendar;
 }
-

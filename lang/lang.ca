@@ -18,7 +18,7 @@ $vocab["admin"]              = "Administració";
 $vocab["help"]               = "Ajuda";
 $vocab["search"]             = "Cerca";
 
-// Used in day.php
+// Used in index.php
 $vocab["bookingsfor"]        = "Reserves per a";
 $vocab["bookingsforpost"]    = ""; // Goes after the date
 $vocab["areas"]              = "Famílies";
@@ -26,8 +26,18 @@ $vocab["daybefore"]          = "Dia anterior";
 $vocab["dayafter"]           = "Dia següent";
 $vocab["gototoday"]          = "Dia actual";
 $vocab["goto"]               = "Anar a";
+$vocab["nav_day"]            = "Dia";
+$vocab["nav_week"]           = "Setmana";
+$vocab["nav_month"]          = "Mes";
 $vocab["highlight_line"]     = "Destacar aquesta línia";
 $vocab["click_to_reserve"]   = "Clicar per fer una reserva.";
+$vocab["weekbefore"]         = "Anar a la setmana anterior";
+$vocab["weekafter"]          = "Anar a la setmana posterior";
+$vocab["gotothisweek"]       = "Anar a la setmana actual";
+$vocab["monthbefore"]        = "Anar al mes anterior";
+$vocab["monthafter"]         = "Anar al mes posterior";
+$vocab["gotothismonth"]      = "Anar al mes actual";
+$vocab["no_rooms_for_area"]  = "No hi ha recursos definits per aquest edifici";
 
 // Used in trailer.inc
 $vocab["viewday"]            = "Veure dia";
@@ -65,14 +75,10 @@ $vocab["rep_type_3"]         = "Mensual";
 $vocab["rep_type_4"]         = "Anual";
 $vocab["rep_end_date"]       = "Data màxima Repetició";
 $vocab["rep_rep_day"]        = "Dia de repetició";
-$vocab["rep_freq"]           = "Freqüència";
-$vocab["rep_num_weeks"]      = "Número de setmanes";
 $vocab["ctrl_click"]         = "Control-Clic per seleccionar més d'un recurs";
 $vocab["entryid"]            = "ID d'entrada";
 $vocab["repeat_id"]          = "ID de repetició";
-$vocab["you_have_not_entered"] = "No ha entrat";
 $vocab["brief_description"]  = "Breu descriptció.";
-$vocab["useful_n-weekly_value"] = "useful n-weekly value.";
 
 // Used in view_entry.php
 $vocab["description"]        = "Descripció";
@@ -134,7 +140,6 @@ $vocab["of"]                 = " de ";
 $vocab["previous"]           = "Anterior";
 $vocab["next"]               = "Següent";
 $vocab["entry"]              = "Entrada";
-$vocab["advanced_search"]    = "Cerca avançada";
 $vocab["search_button"]      = "Cerca";
 $vocab["search_for"]         = "Cerca per";
 $vocab["from"]               = "De";
@@ -160,19 +165,6 @@ $vocab["total"]              = "Total";
 $vocab["submitquery"]        = "Executar informe";
 $vocab["sort_rep"]           = "Ordenar informe per";
 $vocab["sort_rep_time"]      = "Inici data/hora";
-
-// Used in week.php
-$vocab["weekbefore"]         = "Anar a la setmana anterior";
-$vocab["weekafter"]          = "Anar a la setmana posterior";
-$vocab["gotothisweek"]       = "Anar a la setmana actual";
-
-// Used in month.php
-$vocab["monthbefore"]        = "Anar al mes anterior";
-$vocab["monthafter"]         = "Anar al mes posterior";
-$vocab["gotothismonth"]      = "Anar al mes actual";
-
-// Used in {day week month}.php
-$vocab["no_rooms_for_area"]  = "No hi ha recursos definits per aquest edifici";
 
 // Used in admin.php
 $vocab["edit"]               = "Editar";

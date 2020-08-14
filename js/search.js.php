@@ -11,15 +11,10 @@ if ($use_strict)
   echo "'use strict';\n";
 }
 
-// =================================================================================
-
-
-// Extend the init() function 
 ?>
 
-var oldInitSearch = init;
-init = function(args) {
-  oldInitSearch.apply(this, [args]);
+
+$(document).on('page_ready', function() {
   
   var searchForm = $('#search_form'),
       table = $('#search_results'),
@@ -48,11 +43,10 @@ init = function(args) {
                            data: function() {
                                <?php
                                // Get the search parameters, which are all in data- attributes, so
-                               // that we can use them in an Ajax post; add in the ajax and datatable
-                               // flags and also the CSRF token
+                               // that we can use them in an Ajax post; add in the datatable
+                               // flag and also the CSRF token
                                ?>
                                var data = table.data();
-                               data.ajax = '1';
                                data.datatable = '1';
                                data.csrf_token = getCSRFToken();
                                return data;
@@ -64,5 +58,5 @@ init = function(args) {
     makeDataTable('#search_results', tableOptions, {"leftColumns": 1});
   }
     
-};
+});
 

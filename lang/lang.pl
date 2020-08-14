@@ -19,7 +19,7 @@ $vocab["help"]               = "Pomoc";
 $vocab["search"]             = "Szukaj";
 $vocab["outstanding"]        = "oczekujących rezerwacji";
 
-// Uzyte w day.php
+// Uzyte w index.php
 $vocab["bookingsfor"]        = "Rezerwacja dla";
 $vocab["bookingsforpost"]    = ""; // To idzie po dacie
 $vocab["areas"]              = "Strefy";
@@ -27,9 +27,19 @@ $vocab["daybefore"]          = "Idź do dnia przed";
 $vocab["dayafter"]           = "Idź do dnia po";
 $vocab["gototoday"]          = "Idź do dnia dzisiejszego";
 $vocab["goto"]               = "Idź do";
+$vocab["nav_day"]            = "Dzień";
+$vocab["nav_week"]           = "Tydzień";
+$vocab["nav_month"]          = "Miesiąc";
 $vocab["highlight_line"]     = "Podświetl tą linie";
 $vocab["click_to_reserve"]   = "Kliknij na komórkę aby zarezerwować.";
 $vocab["timezone"]           = "Strefa czasowa";
+$vocab["weekbefore"]         = "Przejdź do Poprzedniego Tygodnia";
+$vocab["weekafter"]          = "Przejdź do Następnego Tygodnia";
+$vocab["gotothisweek"]       = "Przejdź Do Bieżącego Tygodnia";
+$vocab["monthbefore"]        = "Przejdź do Poprzedniego Miesiąca";
+$vocab["monthafter"]         = "Przejdż do Następnego Miesiąca";
+$vocab["gotothismonth"]      = "Przejdź do Bieżącegoo Miesiąca";
+$vocab["no_rooms_for_area"]  = "Brak zdefiniowanych pokoi dla tej strefy";
 
 // Uzyte w trailer.inc
 $vocab["viewday"]            = "Zobacz Dzień";
@@ -72,15 +82,11 @@ $vocab["rep_type_3"]         = "Miesięczny";
 $vocab["rep_type_4"]         = "Roczny";
 $vocab["rep_end_date"]       = "Powtórz Datę końcową";
 $vocab["rep_rep_day"]        = "Powtórz Datę";
-$vocab["rep_freq"]           = "Częstotliwość";
-$vocab["rep_num_weeks"]      = "Liczba Tygodni";
 $vocab["skip_conflicts"]     = "Pomiń konflikty";
 $vocab["ctrl_click"]         = "Klikaj myszą przytrzymując klawisz Ctrl aby wybrać więcej niż jeden pokój";
 $vocab["entryid"]            = "ID Wpisu ";
 $vocab["repeat_id"]          = "Powtórz ID ";
-$vocab["you_have_not_entered"] = "Nie wprowadziłeś";
 $vocab["brief_description"]  = "Krótki Opis.";
-$vocab["useful_n-weekly_value"] = "przydatna n-tygodniowa wartość.";
 $vocab["public"]             = "Publiczny";
 $vocab["private"]            = "Prywatnt";
 $vocab["unavailable"]        = "Prywatny";
@@ -141,10 +147,10 @@ $vocab["failed_to_acquire"]  = "Błąd podczas uzyskania wyłącznego dostępu d
 $vocab["invalid_booking"]    = "Niewłaściwa rezerwacja";
 $vocab["must_set_description"] = "Musisz podać krótki opis rezerwacji. Proszę, wróć i wprowadź go.";
 $vocab["no_rooms_selected"]    = "Musisz wybrać pokój.";
-$vocab["mail_subject_approved"]  = "Zatwierdzona rezerwacja w $mrbs_company MRBS";
-$vocab["mail_subject_rejected"]  = "Usunięta rezerwacja w $mrbs_company MRBS";
-$vocab["mail_subject_more_info"] = "$mrbs_company MRBS: Wymagane więcej informacji";
-$vocab["mail_subject_reminder"]  = "Przypomnienie w $mrbs_company MRBS";
+$vocab["mail_subject_approved"]  = "Zatwierdzona rezerwacja w %s MRBS"; // $mrbs_company
+$vocab["mail_subject_rejected"]  = "Usunięta rezerwacja w %s MRBS"; // $mrbs_company
+$vocab["mail_subject_more_info"] = "%s MRBS: Wymagane więcej informacji"; // $mrbs_company
+$vocab["mail_subject_reminder"]  = "Przypomnienie w %s MRBS"; // $mrbs_company
 $vocab["mail_body_approved"]     = "Wpis został zatwierdzony przez administratorów, oto szczegóły:";
 $vocab["mail_body_rej_entry"]    = "Wpis został usunięty przez administratorów, oto szczegóły:";
 $vocab["mail_body_more_info"]    = "Administratorzy wymagają więcej informacji o rezerwacji, oto szczegóły:";
@@ -152,15 +158,14 @@ $vocab["mail_body_reminder"]     = "Przypomnienie - wpis oczekuje na zatwierdzen
 $vocab["mail_body_repeats_booked"]   = "Poniższe terminy zostały zarezerwowane:";
 $vocab["mail_body_repeats_deleted"]  = "Poniższe terminy zostały usunięte:";
 $vocab["mail_body_exceptions"]       = "Poniższe terminy nie mogą być zarezerwowane z powodu konfliktów:";
-$vocab["mail_subject_new_entry"]     = "Wpis wprowadzony w $mrbs_company MRBS";
-$vocab["mail_subject_changed_entry"] = "Wpis zmieniony w $mrbs_company MRBS";
-$vocab["mail_subject_delete"]        = "Wpis usunięty z $mrbs_company MRBS";
+$vocab["mail_subject_new_entry"]     = "Wpis wprowadzony w %s MRBS"; // $mrbs_company
+$vocab["mail_subject_changed_entry"] = "Wpis zmieniony w %s MRBS"; // $mrbs_company
+$vocab["mail_subject_delete"]        = "Wpis usunięty z %s MRBS"; // $mrbs_company
 $vocab["mail_body_new_entry"]     = "Wpis został utworzony, oto szczegóły operacji:";
 $vocab["mail_body_changed_entry"] = "Wpis został zmieniony, oto szczegóły operacji:";
 $vocab["mail_body_del_entry"]     = "Wpis został usunięty, oto szczegóły operacji:";
 $vocab["new_value"]               = "Nowy";
 $vocab["old_value"]               = "Stary";
-$vocab["deleted_by"]              = "Usunięty przez";
 $vocab["reason"]                  = "Powód";
 $vocab["info_requested"]          = "Informacje o";
 $vocab["min_create_time_before"]  = 'Nie można utworzyć rezerwacji, która rozpoczyna się w czasie krótszym niż %1$d %2$s';
@@ -182,7 +187,7 @@ $vocab["max_per_year_area"]       = "Maksymalna liczba rezerwacji na rok przez j
 $vocab["max_per_future_area"]     = "Maksymalna liczba zaległych rezerwacji przez jednego użytkownika w tym budynku to";
 $vocab["skip_and_book"]           = "Pomiń i rezerwuj";
 $vocab["skip_and_book_note"]      = "Uważaj rezerwując, pomijając konflikty";
-$vocab["changes_saved"]           = "Zmiany zapisane";
+
 // Used in pending.php
 $vocab["pending"]            = "Rezerwacja czekające na potwierdzenie";
 $vocab["none_outstanding"]   = "Nie ma rezerwacji oczekujących na zatwierdzenie.";
@@ -203,7 +208,7 @@ $vocab["username_or_email"]  = "Nazwa użytkownika lub e-mail";
 $vocab["database_login"]           = "Login bazy";
 $vocab["upgrade_required"]         = "Baza wymaga aktualizacji. Zrób kopię zapasową bazy przed procesem aktualizacji.";
 $vocab["supply_userpass"]          = "Proszę podać login i hasło do bazy, które mają uprawnienia administratora.";
-$vocab["contact_admin"]            = "Jeśli nie jesteś administratorem MRBS prosimy o kontakt $mrbs_admin.";
+$vocab["contact_admin"]            = "Jeśli nie jesteś administratorem MRBS prosimy o kontakt %s."; // $mrbs_admin
 $vocab["upgrade_to_version"]       = "Aktualizacja bazy do";
 $vocab["upgrade_to_local_version"] = "Aktualizacja do lokalnej bazy";
 $vocab["upgrade_completed"]        = "Baza uaktualniona.";
@@ -251,7 +256,6 @@ $vocab["of"]                 = " z ";
 $vocab["previous"]           = "Poprzedni";
 $vocab["next"]               = "Następny";
 $vocab["entry"]              = "Wpis";
-$vocab["advanced_search"]    = "Wyszukiwanie zaawansowane";
 $vocab["search_button"]      = "Wyszukiwanie";
 $vocab["search_for"]         = "Szukaj";
 $vocab["from"]               = "Od";
@@ -300,19 +304,6 @@ $vocab["delete_entries_warning"] = "UWAGA!  Spowoduje to usunięcie wszystkich d
                                    "Całkowita usuniętych wejść: ";
 $vocab["delete_entries_failed"] = "Wejścia nie mogą być usunięte.";
 
-// Uzyte w week.php
-$vocab["weekbefore"]         = "Przejdź do Poprzedniego Tygodnia";
-$vocab["weekafter"]          = "Przejdź do Następnego Tygodnia";
-$vocab["gotothisweek"]       = "Przejdź Do Bieżącego Tygodnia";
-
-// Uzyte w month.php
-$vocab["monthbefore"]        = "Przejdź do Poprzedniego Miesiąca";
-$vocab["monthafter"]         = "Przejdż do Następnego Miesiąca";
-$vocab["gotothismonth"]      = "Przejdź do Bieżącegoo Miesiąca";
-
-// Uzyte w {day week month}.php
-$vocab["no_rooms_for_area"]  = "Brak zdefiniowanych pokoi dla tej strefy";
-
 // Uzyte w admin.php
 $vocab["edit"]               = "Edycja";
 $vocab["delete"]             = "Usuń";
@@ -347,7 +338,6 @@ $vocab["invalid_area"]            = "Zły budynek!";
 $vocab["invalid_room_name"]       = "Ta nazwa pokoju była już użyta w tym budynku!";
 $vocab["invalid_email"]      = "Błędny email!";
 $vocab["invalid_resolution"]      = "Zła kombinacja pierwszego slotu, ostatniego i rezolucji!";
-$vocab["too_many_slots"]          = 'Trzeba zwiększyć wartość $max_slots w pliku konfiguracyjnym!';
 $vocab["general_settings"]        = "Ogólne";
 $vocab["time_settings"]           = "Czas slotu";
 $vocab["confirmation_settings"]   = "Ustawienia potwierdzania";

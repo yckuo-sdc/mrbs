@@ -29,30 +29,23 @@ function authGet()
 
 function getAuthPassword()
 {
-  global $PHP_AUTH_PW;
-
-  if (isset($PHP_AUTH_PW))
-  {
-    return unslashes($PHP_AUTH_PW);
-  }
-  else
-  {
-    return null;
-  }
+  global $server;
+  
+  return (isset($server['PHP_AUTH_PW'])) ? $server['PHP_AUTH_PW'] : null;
 }
 
 function getUserName()
 {
-  global $PHP_AUTH_USER;
+  global $server;
   
   // We save the results of the user validation so that we avoid any performance
   // penalties in authValidateUser, which can be severe if for example we are using
   // LDAP authentication
-  static $authorised_user = NULL;
+  static $authorised_user = null;
 
-  if (isset($PHP_AUTH_USER))
+  if (isset($server['PHP_AUTH_USER']))
   {
-    $user = unslashes($PHP_AUTH_USER);
+    $user = $server['PHP_AUTH_USER'];
 
     if ((isset($authorised_user) && ($authorised_user == $user)) ||
         (authValidateUser($user, getAuthPassword()) !== false))
@@ -61,12 +54,12 @@ function getUserName()
     }
     else
     {
-      $authorised_user = NULL;
+      $authorised_user = null;
     }
   }
   else
   {
-    $authorised_user = NULL;
+    $authorised_user = null;
   }
   
   return $authorised_user;
@@ -75,15 +68,7 @@ function getUserName()
 // Print the logon entry on the top banner.
 function print_logon_box()
 {
-  global $QUERY_STRING;
-  
-  $target_url = this_page();
-
-  if (isset($QUERY_STRING))
-  {
-    $target_url = $target_url . "?" . $QUERY_STRING;
-  }
-  
+  $target_url = this_page(true);
   $user = getUserName();
   
   if (isset($user))
@@ -92,10 +77,7 @@ function print_logon_box()
   }
   else
   {
-    print_unknown_user();
     print_logon_button($target_url);
   }
-  
-  print_userlist_link();
 }
 

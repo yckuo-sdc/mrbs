@@ -9,12 +9,8 @@ use MRBS\Form\FieldInputRadioGroup;
 use MRBS\Form\FieldInputSubmit;
 use MRBS\Form\FieldInputText;
 use MRBS\Form\FieldSelect;
+use \ZipArchive;
 
-if (version_compare(PHP_VERSION, '5.0.0', '<'))
-{
-  // We use stream_get_line() which is only available in PHP 5
-  exit("Import requires PHP 5.  Your system is running PHP " . PHP_VERSION);
-}
 
 require "defaultincludes.inc";
 require_once "functions_ical.inc";
@@ -764,9 +760,9 @@ if (!empty($import))
 }
 
 // Check the user is authorised for this page
-checkAuthorised();
+checkAuthorised(this_page());
 
-print_header($day, $month, $year, $area, $room);
+print_header($view, $view_all, $year, $month, $day, $area, $room);
 
 
 // PHASE 2 - Process the files
@@ -901,5 +897,4 @@ $form->addElement($fieldset);
 $form->render();
 
   
-output_trailer();
-
+print_footer();

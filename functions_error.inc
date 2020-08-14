@@ -29,10 +29,83 @@ function to_html($string)
 }
 
 
+function get_arg_string($args)
+{
+  $result = array();
+
+  foreach ($args as $arg)
+  {
+    $type = gettype($arg);
+
+    switch ($type)
+    {
+      case 'boolean';
+        $result[] = ($arg) ? 'true' : 'false';
+        break;
+
+      case 'integer':
+      case 'double':
+      case 'string':
+        $result[] = $arg;
+        break;
+
+      default:
+        $result[] = $type;
+        break;
+    }
+  }
+
+  return implode(', ', $result);
+}
+
+
+// Generate a backtrace.  This function allows us to format the output slightly better
+// than debug_print_backtrace(), for example by replacing newlines with <br> tags.
+function generate_backtrace()
+{
+  $backtrace = '';
+  $calls = debug_backtrace();
+
+  foreach ($calls as $i => $call)
+  {
+    $backtrace .= "#$i ";
+
+    if (isset($call['class']) && isset($call['type']))
+    {
+      $backtrace .= $call['class'] . $call['type'];
+    }
+
+    if (isset($call['function']))
+    {
+      $backtrace .= $call['function'];
+      $backtrace .= '(';
+      // We're not interested in the args for the first two calls because they
+      // are just going to repeat the error message
+      if (isset($call['args']) && ($i > 1))
+      {
+        $backtrace .= get_arg_string($call['args']);
+      }
+      $backtrace .= ')';
+    }
+
+    if (isset($call['file']) && isset($call['line']))
+    {
+      $backtrace .= ' called at [' . $call['file'] . ':' . $call['line'] . ']';
+    }
+
+    $backtrace .= "\n";
+  }
+
+  return $backtrace;
+}
+
+
 function output_error($heading, $body, $show_data=false)
 {
+  global $debug, $auth, $get, $post;
+
   static $default_timezone_set = false;
-  
+
   // We can't start outputting any error messages unless the default timezone has been set,
   // so if we are not sure that it has been set, then set it.
   if (!$default_timezone_set)
@@ -40,23 +113,45 @@ function output_error($heading, $body, $show_data=false)
     mrbs_default_timezone_set();
     $default_timezone_set = true;
   }
-  
-  if ($show_data)
+
+  if ($show_data &&
+      (isset($get) || isset($post) || isset($_SESSION)))
   {
-      if (isset($_GET))
+    $body .= "\n";
+    if (isset($get))
+    {
+      $body .= "MRBS GET: " . print_r($get, true);
+    }
+    if (isset($post))
+    {
+      $post_tmp = $post;
+      if (!$auth['log_credentials'])
       {
-        $body .= "MRBS GET: " . print_r($_GET, true);
+        // Overwrite the username and password to stop them appearing
+        // in error logs.
+        foreach (array('username', 'password') as $var)
+        {
+          if (isset($post_tmp[$var]))
+          {
+            $post_tmp[$var] = '****';
+          }
+        }
       }
-      if (isset($_POST))
-      {
-        $body .= "MRBS POST: " . print_r($_POST, true);
-      }
-      if (isset($_SESSION))
-      {
-        $body .= "MRBS SESSION: " . print_r($_SESSION, true);
-      }
+      $body .= "MRBS POST: " . print_r($post_tmp, true);
+    }
+    if (isset($_SESSION))
+    {
+      $body .= "MRBS SESSION: " . print_r($_SESSION, true);
+    }
   }
-  
+
+  $body .= "\n";
+
+  if ($debug)
+  {
+    $body .=  generate_backtrace();
+  }
+
   if (ini_get('display_errors'))
   {
     echo "<b>" . to_html(htmlspecialchars($heading)) . "</b>\n";
@@ -69,7 +164,7 @@ function output_error($heading, $body, $show_data=false)
 }
 
 
-function error_handler($errno, $errstr, $errfile, $errline, $errcontext)
+function error_handler($errno, $errstr, $errfile, $errline)
 {
   // Check to see whether error reporting has been disabled by
   // the error suppression operator (@), because the custom error
@@ -78,26 +173,29 @@ function error_handler($errno, $errstr, $errfile, $errline, $errcontext)
   {
     return;
   }
-  
+
   $heading = "\n" . get_error_name($errno) . " in $errfile at line $errline\n";
-  
+
   // Show the superglobal data unless the error is minor
   $show_data = !in_array($errno, array(E_NOTICE, E_USER_NOTICE, E_USER_DEPRECATED));
-  
-  output_error($heading, $errstr . "\n", $show_data);
+
+  output_error($heading, $errstr, $show_data);
 }
 
 
+// As long as we are supporting PHP5 we cannot have a type declaration for $exception.
+// In PHP5 we could use \Exception and in PHP7 \Throwable, but if we are supporting
+// both then no type declaration is the only option.
 function exception_handler($exception)
 {
   $class = get_class($exception);
-  
+
   $heading = "Uncaught exception '$class' in " . $exception->getFile() . " at line " . $exception->getLine() . "\n";
   $body = $exception->getMessage() . "\n" .
           $exception->getTraceAsString() . "\n";
-             
+
   output_error($heading, $body, $show_data=true);
-  
+
   switch ($class)
   {
     case __NAMESPACE__ . "\\DBException":
@@ -108,7 +206,7 @@ function exception_handler($exception)
       $fatal_message = get_vocab("fatal_error");
       break;
   }
-  
+
   fatal_error($fatal_message);
 }
 
@@ -121,7 +219,7 @@ function fatal_error($message)
 {
   print_simple_header();
   echo "<p>\n". htmlspecialchars($message) . "</p>\n";
-  output_trailer();
+  print_footer();
   exit;
 }
 
@@ -129,8 +227,10 @@ function fatal_error($message)
 function shutdown_function()
 {
   $error = error_get_last();
-  
-  if ((strpos($error['message'], 'undefined function iconv()') !== false))
+
+  if (isset($error) &&
+      (strpos($error['message'], 'iconv()') !== false) &&
+      !function_exists('iconv'))
   {
     // Help new admins understand what to do in case the iconv error occurs...
     $heading = "MRBS - iconv module not installed. ";
@@ -146,7 +246,7 @@ function shutdown_function()
             "On a Unix server, recompile your PHP module with the appropriate option for " .
             "enabling the iconv extension. Consult your PHP server documentation for " .
             "more information about enabling iconv support.\n";
-            
+
     output_error($heading, $body, false);
   }
 }

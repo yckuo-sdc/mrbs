@@ -1,531 +1,43 @@
 <?php
 namespace MRBS;
 
+use \Locale;
+
 require_once "functions.inc";
 
 
-// A map of browser locale aliases, maps to "our" preferred representation.
-// We downcase the key before using this map, so the keys need to be all
-// lower-case.
+// A map of browser locale aliases
 $lang_aliases = array
 (
-  'sh' => 'sr-rs-latin',
-  'sr' => 'sr-rs-latin',
-  'sr-latn' => 'sr-rs-latin',
-  'sr-latn-rs' => 'sr-rs-latin',
+  'no' => 'nb',         // Not all operating systems will accept a locale of 'no'
+  'sh' => 'sr-latn-rs',
 );
 
-// A map is needed to convert from the HTTP language specifier to a
-// locale specifier for Windows
-//
-// The ordering of this array is important as it is also used to map in the
-// reverse direction, ie to convert a Windows style locale into an xx-yy style
-// locale by finding the first occurrence of a value and then using the
-// corresponding key.
-//
-// These locale TLAs found at:
-// https://www.microsoft.com/resources/msdn/goglobal/default.mspx
-$lang_map_windows = array
-(
-  'bg' => 'bgr',
-  'bg-bg' => 'bgr',
-  'ca' => 'cat',
-  'ca-es' => 'cat',
-  'cs' => 'csy',
-  'cs-cz' => 'csy',
-  'da' => 'dan',
-  'da-dk' => 'dan',
-  'de' => 'deu',
-  'de-at' => 'dea',
-  'de-ch' => 'des',
-  'de-de' => 'deu',
-  'de-li' => 'dec',
-  'de-lu' => 'del',
-  'el' => 'ell',
-  'el-gr' => 'ell',
-  'en' => 'enu',
-  'en-au' => 'ena',
-  'en-bz' => 'enl',
-  'en-ca' => 'enc',
-  'en-cb' => 'enb',
-  'en-gb' => 'eng',
-  'en-ie' => 'eni',
-  'en-in' => 'enn',
-  'en-jm' => 'enj',
-  'en-my' => 'enm',
-  'en-nz' => 'enz',
-  'en-ph' => 'enp',
-  'en-tt' => 'ent',
-  'en-us' => 'enu',
-  'en-za' => 'ens',
-  'en-zw' => 'enw',
-  'es' => 'esp',
-  'es-ar' => 'ess',
-  'es-bo' => 'esb',
-  'es-cl' => 'esl',
-  'es-co' => 'eso',
-  'es-cr' => 'esc',
-  'es-do' => 'esd',
-  'es-ec' => 'esf',
-  'es-es' => 'esn',
-  'es-gt' => 'esg',
-  'es-hn' => 'esh',
-  'es-mx' => 'esm',
-  'es-ni' => 'esi',
-  'es-pa' => 'esa',
-  'es-pe' => 'esr',
-  'es-py' => 'esz',
-  'es-sv' => 'ese',
-  'es-us' => 'est',
-  'es-uy' => 'esy',
-  'es-ve' => 'esv',
-  'et' => 'eti',
-  'et-ee' => 'eti',
-  'eu' => 'euq',
-  'eu-es' => 'euq',
-  'fi' => 'fin',
-  'fi-fi' => 'fin',
-  'fr' => 'fra',
-  'fr-be' => 'frb',
-  'fr-ca' => 'frc',
-  'fr-ch' => 'frs',
-  'fr-fr' => 'fra',
-  'fr-lu' => 'frl',
-  'fr-mc' => 'frm',
-  'he' => 'heb',
-  'he-il' => 'heb',
-  'hr' => 'hrv',
-  'hr-hr' => 'hrv',
-  'hu' => 'hun',
-  'hu-hu' => 'hun',
-  'id' => 'ind',
-  'id-id' => 'ind',
-  'it' => 'ita',
-  'it-ch' => 'its',
-  'it-it' => 'ita',
-  'ja' => 'jpn',
-  'ja-jp' => 'jpn',
-  'ko' => 'kor',
-  'ko-kr' => 'kor',
-  'nb' => 'nor',
-  'nb-no' => 'nor',
-  'nl' => 'nld',
-  'nl-be' => 'nlb',
-  'nl-nl' => 'nld',
-  'nn' => 'non',
-  'nn-no' => 'non',
-  'no' => 'nor',
-  'no-no' => 'nor',
-  'pl' => 'plk',
-  'pl-pl' => 'plk',
-  'pt' => 'ptb',
-  'pt-br' => 'ptb',
-  'pt-pt' => 'ptg',
-  'ro' => 'rom',
-  'ro-ro' => 'rom',
-  'ru' => 'rus',
-  'ru-ru' => 'rus',
-  'sk' => 'sky',
-  'sk-sk' => 'sky',
-  'sl' => 'slv',
-  'sl-si' => 'slv',
-  'sr' => 'srl',
-  'sr-rs-latin' => 'srl',
-  'sr-hr' => 'srb',
-  'sv' => 'sve',
-  'sv-fi' => 'svf',
-  'sv-se' => 'sve',
-  'th' => 'tha',
-  'th-th' => 'tha',
-  'tr' => 'trk',
-  'tr-tr' => 'trk',
-  'zh' => 'chs',
-  'zh-cn' => 'chs',
-  'zh-hk' => 'zhh',
-  'zh-mo' => 'zhm',
-  'zh-sg' => 'zhi',
-  'zh-tw' => 'cht'
+// Map non-standard language codes used by flatpickr onto BCP 47 language tags
+$flatpickr_lang_map = array(
+  'at'     => 'de-at',
+  'cat'    => 'ca',
+  'gr'     => 'el',
+  'kz'     => 'kk',
+  'sr-cyr' => 'sr-cyrl',
+  'vn'     => 'vi'
 );
 
-// This maps a Windows locale to the charset it uses, which are
-// all Windows code pages
-//
-// The code pages used by these locales found at: 
-// http://msdn.microsoft.com/en-us/goglobal/bb896001.aspx
-$winlocale_codepage_map = array
-(
-  'afk' => 'CP1252',
-  'ara' => 'CP1256',
-  'arb' => 'CP1256',
-  'are' => 'CP1256',
-  'arg' => 'CP1256',
-  'arh' => 'CP1256',
-  'ari' => 'CP1256',
-  'arj' => 'CP1256',
-  'ark' => 'CP1256',
-  'arl' => 'CP1256',
-  'arm' => 'CP1256',
-  'aro' => 'CP1256',
-  'arq' => 'CP1256',
-  'ars' => 'CP1256',
-  'art' => 'CP1256',
-  'ary' => 'CP1256',
-  'aze' => 'CP1254',
-  'bas' => 'CP1251',
-  'bel' => 'CP1251',
-  'bgr' => 'CP1251',
-  'bre' => 'CP1252',
-  'bsb' => 'CP1250',
-  'bsc' => 'CP1251',
-  'cat' => 'CP1252',
-  'chs' => 'CP936',
-  'cht' => 'CP950',
-  'cos' => 'CP1252',
-  'csy' => 'CP1250',
-  'cym' => 'CP1252',
-  'dan' => 'CP1252',
-  'dea' => 'CP1252',
-  'dec' => 'CP1252',
-  'del' => 'CP1252',
-  'des' => 'CP1252',
-  'deu' => 'CP1252',
-  'dsb' => 'CP1252',
-  'ell' => 'CP1253',
-  'ena' => 'CP1252',
-  'enb' => 'CP1252',
-  'enc' => 'CP1252',
-  'ene' => 'CP1252',
-  'eng' => 'CP1252',
-  'eni' => 'CP1252',
-  'enj' => 'CP1252',
-  'enl' => 'CP1252',
-  'enm' => 'CP1252',
-  'enn' => 'CP1252',
-  'enp' => 'CP1252',
-  'ens' => 'CP1252',
-  'ent' => 'CP1252',
-  'enu' => 'CP1252',
-  'enw' => 'CP1252',
-  'enz' => 'CP1252',
-  'esa' => 'CP1252',
-  'esb' => 'CP1252',
-  'esc' => 'CP1252',
-  'esd' => 'CP1252',
-  'ese' => 'CP1252',
-  'esf' => 'CP1252',
-  'esg' => 'CP1252',
-  'esh' => 'CP1252',
-  'esi' => 'CP1252',
-  'esl' => 'CP1252',
-  'esm' => 'CP1252',
-  'esn' => 'CP1252',
-  'eso' => 'CP1252',
-  'esp' => 'CP1252',
-  'esr' => 'CP1252',
-  'ess' => 'CP1252',
-  'est' => 'CP1252',
-  'esu' => 'CP1252',
-  'esv' => 'CP1252',
-  'esy' => 'CP1252',
-  'esz' => 'CP1252',
-  'euq' => 'CP1252',
-  'eti' => 'CP1257',
-  'far' => 'CP1256',
-  'fin' => 'CP1252',
-  'fos' => 'CP1252',
-  'fpo' => 'CP1252',
-  'fra' => 'CP1252',
-  'frb' => 'CP1252',
-  'frc' => 'CP1252',
-  'frl' => 'CP1252',
-  'frm' => 'CP1252',
-  'frs' => 'CP1252',
-  'fyn' => 'CP1252',
-  'glc' => 'CP1252',
-  'gsw' => 'CP1252',
-  'hau' => 'CP1252',
-  'heb' => 'CP1255',
-  'hrb' => 'CP1250',
-  'hrv' => 'CP1250',
-  'hsb' => 'CP1252',
-  'hun' => 'CP1250',
-  'ibo' => 'CP1252',
-  'ind' => 'CP1252',
-  'ire' => 'CP1252',
-  'isl' => 'CP1252',
-  'ita' => 'CP1252',
-  'its' => 'CP1252',
-  'iuk' => 'CP1252',
-  'jpn' => 'CP932',
-  'kal' => 'CP1252',
-  'kin' => 'CP1252',
-  'kkz' => 'CP1251',
-  'kor' => 'CP949',
-  'kyr' => 'CP1251',
-  'lbx' => 'CP1252',
-  'lth' => 'CP1257',
-  'lvi' => 'CP1257',
-  'mki' => 'CP1251',
-  'mon' => 'CP1251',
-  'mpd' => 'CP1252',
-  'msb' => 'CP1252',
-  'msl' => 'CP1252',
-  'mwk' => 'CP1252',
-  'nlb' => 'CP1252',
-  'nld' => 'CP1252',
-  'non' => 'CP1252',
-  'nor' => 'CP1252',
-  'nso' => 'CP1252',
-  'oci' => 'CP1252',
-  'plk' => 'CP1250',
-  'prs' => 'CP1256',
-  'ptb' => 'CP1252',
-  'ptg' => 'CP1252',
-  'qub' => 'CP1252',
-  'que' => 'CP1252',
-  'qup' => 'CP1252',
-  'qut' => 'CP1252',
-  'rmc' => 'CP1252',
-  'rom' => 'CP1250',
-  'rus' => 'CP1251',
-  'sah' => 'CP1252',
-  'sky' => 'CP1250',
-  'slv' => 'CP1250',
-  'sma' => 'CP1252',
-  'smb' => 'CP1252',
-  'sme' => 'CP1252',
-  'smf' => 'CP1252',
-  'smg' => 'CP1252',
-  'smj' => 'CP1252',
-  'smk' => 'CP1252',
-  'smn' => 'CP1252',
-  'sms' => 'CP1252',
-  'sqi' => 'CP1250',
-  'srb' => 'CP1251',
-  'srl' => 'CP1250',
-  'srn' => 'CP1251',
-  'srs' => 'CP1250',
-  'sve' => 'CP1252',
-  'svf' => 'CP1252',
-  'swk' => 'CP1252',
-  'taj' => 'CP1251',
-  'tha' => 'CP874',
-  'trk' => 'CP1254',
-  'tsn' => 'CP1252',
-  'ttt' => 'CP1251',
-  'tuk' => 'CP1250',
-  'tzm' => 'CP1252',
-  'uig' => 'CP1256',
-  'ukr' => 'CP1251',
-  'urb' => 'CP1256',
-  'uzb' => 'CP1254',
-  'vit' => 'CP1258',
-  'wol' => 'CP1252',
-  'xho' => 'CP1252',
-  'yor' => 'CP1252',
-  'zhh' => 'CP950',
-  'zhi' => 'CP936',
-  'zhm' => 'CP950',
-  'zul' => 'CP1252',
-);
-
-// These are special cases, generally we can convert from the HTTP
-// language specifier to a locale specifier without a map
-$lang_map_unix = array
-(
-  'ca' => 'ca_ES',
-  'cs' => 'cs_CZ',
-  'da' => 'da_DK',
-  'el' => 'el_GR',
-  'en' => 'en_GB',
-  'et' => 'et_EE',
-  'eu' => 'eu_ES',
-  'ja' => 'ja_JP',
-  'ko' => 'ko_KR',
-  'nb' => 'nb_NO',
-  'nn' => 'nn_NO',
-  'sh' => 'sr_RS',
-  'sl' => 'sl_SI',
-  'sr-rs-latin' => 'sr_RS',
-  'sv' => 'sv_SE',
-  'zh' => 'zh_CN',
-);
-
-// A map to add extra locale specifiers onto the end of a locale specifier
-// *after* the UTF-8 specifier is added. Keys must match with $lang_map_unix
-// above
-$lang_map_unix_postfix = array
-(
-  'sr-rs-latin' => '@latin',
-);
-
-// IBM AIX locale to code set table
-// See http://publibn.boulder.ibm.com/doc_link/en_US/a_doc_lib/libs/basetrf2/setlocale.htm
-$aixlocale_codepage_map = array
-(
-  'Ar_AA' => 'IBM-1046',
-  'ar_AA' => 'ISO8859-6',
-  'bg_BG' => 'ISO8856-5',
-  'cs_CZ' => 'ISO8859-2',
-  'Da_DK' => 'IBM-850',
-  'da_DK' => 'ISO8859-1',
-  'De_CH' => 'IBM-850',
-  'de_CH' => 'ISO8859-1',
-  'De_DE' => 'IBM-850',
-  'de_DE' => 'ISO8859-1',
-  'el_GR' => 'ISO8859-7',
-  'En_GB' => 'IBM-850',
-  'en_GB' => 'ISO8859-1',
-  'En_US' => 'IBM-850',
-  'en_US' => 'ISO8859-1',
-  'Es_ES' => 'IBM-850',
-  'es_ES' => 'ISO8859-1',
-  'Fi_FI' => 'IBM-850',
-  'fi_FI' => 'ISO8859-1',
-  'Fr_BE' => 'IBM-850',
-  'fr_BE' => 'ISO8859-1',
-  'Fr_CA' => 'IBM-850',
-  'fr_CA' => 'ISO8859-1',
-  'Fr_FR' => 'IBM-850',
-  'fr_FR' => 'ISO8859-1 ',
-  'Fr_CH' => 'IBM-850',
-  'fr_CH' => 'ISO8859-1',
-  'hr_HR' => 'ISO8859-2',
-  'hu_HU' => 'ISO8859-2',
-  'Is_IS' => 'IBM-850',
-  'is_IS' => 'ISO8859-1',
-  'It_IT' => 'IBM-850',
-  'it_IT' => 'ISO8859-1',
-  'Iw_IL' => 'IBM-856',
-  'iw_IL' => 'ISO8859-8',
-  'Ja_JP' => 'IBM-943',
-  'ko_KR' => 'IBM-eucKR',
-  'mk_MK' => 'ISO8859-5',
-  'Nl_BE' => 'IBM-850',
-  'nl_BE' => 'ISO8859-1',
-  'Nl_NL' => 'IBM-850',
-  'nl_NL' => 'ISO8859-1',
-  'No_NO' => 'IBM-850',
-  'no_NO' => 'ISO8859-1',
-  'pl_PL' => 'ISO8859-2',
-  'Pt_PT' => 'IBM-850',
-  'pt_PT' => 'ISO8859-1',
-  'ro_RO' => 'ISO8859-2',
-  'ru_RU' => 'ISO8859-5',
-  'sh_SP' => 'ISO8859-2',
-  'sl_SI' => 'ISO8859-2',
-  'sk_SK' => 'ISO8859-2',
-  'sr_SP' => 'ISO8859-5',
-  'Zh_CN' => 'GBK',
-  'Sv_SE' => 'IBM-850',
-  'sv_SE' => 'ISO8859-1',
-  'tr_TR' => 'ISO8859-9',
-  'zh_TW' => 'IBM-eucTW'
-);
-
-// GNU iconv code set to IBM AIX libiconv code set table
-// Keys of this table should be in lowercase, and searches should be performed using lowercase!
-$gnu_iconv_to_aix_iconv_codepage_map = array
-(
-  // "iso-8859-[1-9]" --> "ISO8859-[1-9]" according to http://publibn.boulder.ibm.com/doc_link/en_US/a_doc_lib/libs/basetrf2/setlocale.htm
-  'iso-8859-1' => 'ISO8859-1',
-  'iso-8859-2' => 'ISO8859-2',
-  'iso-8859-3' => 'ISO8859-3',
-  'iso-8859-4' => 'ISO8859-4',
-  'iso-8859-5' => 'ISO8859-5',
-  'iso-8859-6' => 'ISO8859-6',
-  'iso-8859-7' => 'ISO8859-7',
-  'iso-8859-8' => 'ISO8859-8',
-  'iso-8859-9' => 'ISO8859-9',
-
-  // "big5" --> "IBM-eucTW" according to http://kadesh.cepba.upc.es/mancpp/classref/ref/ITranscoder_DSC.htm
-  'big5' => 'IBM-eucTW',
-
-  // "big-5" --> "IBM-eucTW" (see above)
-  'big-5' => 'IBM-eucTW'
-);
-
-// IBM AIX libiconv UTF-8 converters
-// See http://publibn.boulder.ibm.com/doc_link/en_US/a_doc_lib/aixprggd/genprogc/convert_prg.htm#HDRDNNRI49HOWA
-$aix_utf8_converters = array
-(
-  'ISO8859-1',
-  'ISO8859-2',
-  'ISO8859-3',
-  'ISO8859-4',
-  'ISO8859-5',
-  'ISO8859-6',
-  'ISO8859-7',
-  'ISO8859-8',
-  'ISO8859-9',
-  'JISX0201.1976-0',
-  'JISX0208.1983-0',
-  'CNS11643.1986-1',
-  'CNS11643.1986-2',
-  'KSC5601.1987-0',
-  'IBM-eucCN',
-  'IBM-eucJP',
-  'IBM-eucKR',
-  'IBM-eucTW',
-  'IBM-udcJP',
-  'IBM-udcTW',
-  'IBM-sbdTW',
-  'UCS-2',
-  'IBM-437',
-  'IBM-850',
-  'IBM-852',
-  'IBM-857',
-  'IBM-860',
-  'IBM-861',
-  'IBM-863',
-  'IBM-865',
-  'IBM-869',
-  'IBM-921',
-  'IBM-922',
-  'IBM-932',
-  'IBM-943',
-  'IBM-934',
-  'IBM-935',
-  'IBM-936',
-  'IBM-938',
-  'IBM-942',
-  'IBM-944',
-  'IBM-946',
-  'IBM-948',
-  'IBM-1124',
-  'IBM-1129',
-  'TIS-620',
-  'IBM-037',
-  'IBM-273',
-  'IBM-277',
-  'IBM-278',
-  'IBM-280',
-  'IBM-284',
-  'IBM-285',
-  'IBM-297',
-  'IBM-500',
-  'IBM-875',
-  'IBM-930',
-  'IBM-933',
-  'IBM-937',
-  'IBM-939',
-  'IBM-1026',
-  'IBM-1112',
-  'IBM-1122',
-  'IBM-1124',
-  'IBM-1129',
-  'IBM-1381',
-  'GBK',
-  'TIS-620'
+// Map flatpickr language file names onto flatpickr fp.l10ns properties
+// so that they can be used with flatpickr.localize.
+$flatpickr_property_map = array(
+  'sr-cyr' => 'sr',
+  'zh-tw'  => 'zh_tw'
 );
 
 // The DataTables language files are for the moment given descriptive names.   I have
-// asked the DataTables team to use standard tags instead, but until that happens we have
+// asked the DataTables team to use BCP 47 tags instead, but until that happens we have
 // to map the descriptions onto tags.  (The other method would be to rename all the files,
 // but then it would be less easy to take new releases of DataTables).
-$datatable_lang_map = array(
+$datatables_lang_map = array(
   'Afrikaans'           => 'af',
   'Albanian'            => 'sq',
+  'Amharic'             => 'am',
   'Arabic'              => 'ar',
   'Armenian'            => 'hy',
   'Azerbaijan'          => 'az',
@@ -541,6 +53,7 @@ $datatable_lang_map = array(
   'Danish'              => 'da',
   'Dutch'               => 'nl',
   'English'             => 'en',
+  'Esperanto'           => 'eo',
   'Estonian'            => 'et',
   'Filipino'            => 'fil',
   'Finnish'             => 'fi',
@@ -558,15 +71,21 @@ $datatable_lang_map = array(
   'Irish'               => 'ga',
   'Italian'             => 'it',
   'Japanese'            => 'ja',
+  'Kazakh'              => 'kk',
+  'Khmer'               => 'km',
   'Korean'              => 'ko',
+  'Kurdish'             => 'ku',
   'Kyrgyz'              => 'ky',
+  'Lao'                 => 'lo',
   'Latvian'             => 'lv',
   'Lithuanian'          => 'lt',
   'Macedonian'          => 'mk',
   'Malay'               => 'ms',
   'Mongolian'           => 'mn',
   'Nepali'              => 'ne',
-  'Norwegian'           => 'no',
+  'Norwegian-Bokmal'    => 'nb',
+  'Norwegian-Nynorsk'   => 'nn',
+  'Pashto'              => 'ps',
   'Persian'             => 'fa',
   'Polish'              => 'pl',
   'Portuguese-Brasil'   => 'pt-br',
@@ -574,16 +93,19 @@ $datatable_lang_map = array(
   'Romanian'            => 'ro',
   'Russian'             => 'ru',
   'Serbian'             => 'sr',
+  'Serbian_latin'       => 'sr-latn',
   'Sinhala'             => 'si',
   'Slovak'              => 'sk',
   'Slovenian'           => 'sl',
   'Spanish'             => 'es',
   'Swahili'             => 'sw',
   'Swedish'             => 'sv',
+  'Tajik'               => 'tg',
   'Tamil'               => 'ta',
+  'telugu'              => 'te',
   'Thai'                => 'th',
   'Turkish'             => 'tr',
-  'Ukranian'            => 'uk',
+  'Ukrainian'           => 'uk',
   'Urdu'                => 'ur',
   'Uzbek'               => 'uz',
   'Vietnamese'          => 'vi',
@@ -592,7 +114,11 @@ $datatable_lang_map = array(
 
 
 // A list of languages that use Right to Left text
-$rtl_languages = array('he');
+$rtl_languages = array(
+  'he'
+);
+
+
 
 // Set the default character encoding
 ini_set('default_charset', 'UTF-8');
@@ -604,339 +130,338 @@ if (function_exists('mb_internal_encoding'))
 }
 
 
-////////////////////////////////////////////////////////////////////////
-// Language token handling
+// Determine locale and language to use.  MRBS's strategy is first to find the locale
+// that best fits the config settings and the user's browser preferences.  Then it
+// finds a language that best fits the locale, subject to any overriding config settings.
+//
+// Locales will also be needed for third party JavaScript libraries such as datepickers.
+// MRBS tries to find the best match for these depending on the localisations available
+// for the library.   This may sometimes mean that the locale for the library, eg the
+// datepicker, is different from the main locale.   But this is probably better than
+// trying to find a locale that is available on the server and has a translation available
+// in MRBS and has localisations available in all the third party libraries.
 
-// Get a default set of language tokens, you can change this if you like.
-// Always include English as the fallback language, in case the selected language
-// is missing some translated tokens
-set_vocab('en');
-if ($default_language_tokens != 'en')
+
+// Translate languages in the header string to their aliases
+if (isset($server['HTTP_ACCEPT_LANGUAGE']))
 {
-  set_vocab($default_language_tokens);
+  $aliased_header = alias_header($server['HTTP_ACCEPT_LANGUAGE'], $lang_aliases);
+}
+else
+{
+  $aliased_header = null;
 }
 
-// Get first default set of language tokens for emails.
-$need_to_send_mail = ($mail_settings['admin_on_bookings'] or
-                      $mail_settings['area_admin_on_bookings'] or
-                      $mail_settings['room_admin_on_bookings'] or
-                      $mail_settings['booker'] or
-                      $mail_settings['book_admin_on_approval']);
-                      
-if ($need_to_send_mail)
+// Get the locale that we should be using
+$locale = get_mrbs_locale($aliased_header);
+
+// Then set the locale
+set_mrbs_locale($locale);
+
+// Find the best fit for the language that we should be using
+$lang = get_mrbs_lang($locale);
+
+// And then set that vocab
+if (false === set_vocab($lang))
 {
-  $web_vocab = $vocab;   // Save $vocab before it gets overwritten
-  set_vocab($mail_settings['admin_lang']);
-  $mail_vocab = $vocab;
-  $vocab = $web_vocab;  // Restore $vocab
+  throw new \Exception("MRBS: could not set language to '$lang'");
 }
 
 
 
-// Define the default locale here. For a list of supported
-// locales on your system do "locale -a"
-setlocale(LC_ALL,'C');
 
-// We attempt to make up a sensible locale from the HTTP_ACCEPT_LANGUAGE
-// environment variable.
-$cli_mode = is_cli();
-
-// Get the acceptable languages, convert to aliases where applicable and sort
-// them in reverse order so that the most acceptable one is at the start
-$langs = get_language_qualifiers();
-$langs = alias_qualifiers($langs);
-arsort($langs, SORT_NUMERIC);
-
-// The following attempts to import a language based on what the client
-// is using.
-$doneit = 0;
-
-// First try for an exact match, so if the user specified en-gb, look
-// for lang.en-gb
-foreach ($langs as $lang => $qual)
+// Determines whether we are using a RTL language
+function using_rtl_lang()
 {
-  if (set_vocab($lang))
+  global $rtl_languages;
+
+  $lang = get_mrbs_lang();
+  return in_array(utf8_strtolower($lang), $rtl_languages);
+}
+
+
+// Converts a locale to standard BCP 47 format
+function convert_to_BCP47($locale)
+{
+  // Parse it and then recompose it.  This will get the capitalisation correct, eg
+  // "sr-Latn-RS".  Note though that BCP 47 language tags are case insensitive and
+  // the capitalisation is just a convention.
+  $locale = Locale::composeLocale(Locale::parseLocale($locale));
+  // Replace the underscores with hyphens.  The PHP Locale class will return underscores,
+  // but the BCP 47 standard uses hyphens.
+  return str_replace('_', '-', $locale);
+}
+
+
+function set_mrbs_locale($locale)
+{
+  $os_locale = System::getOSlocale($locale);
+
+  if (false === setlocale(LC_ALL, $os_locale))
   {
-    // Work out if we're using a RTL language.   This variable is used
-    // globally so that we can include the correct stylesheet
-    $using_rtl = in_array(utf8_strtolower($lang), $rtl_languages);
-    $doneit = 1;
-    break;
-  }
-}
+    // $os_locale will be an array
+    $message = "Server failed to set locale to " . json_encode($os_locale) .
+               " for language tag '$locale'.";;
+    trigger_error($message, E_USER_NOTICE);
 
-if ($doneit == 0)
-{
-  // None of the user's preferred languages was available, so try to
-  // find a lang file for one of the base languages, e.g. look for
-  // lang.en if "en-ca" was specified.
-  foreach ($langs as $lang => $qual)
-  {
-    if (set_vocab(substr($lang,0,2)))
+    if (false === setlocale(LC_ALL, 'C'))
     {
-      // If we have found a translation, update the locale to match
-      break;
+      fatal_error("Could not set locale at all, not even to 'C'");
     }
   }
 }
 
-// Now try and get the locale that best matches the language, making sure
-// that it at least shares a base language with the chosen lang.  For example,
-// if the user's browser preferences were for "en-GB, en", we want to give them
-// the en-GB locale even though we've only got the en language tokens.
-foreach ($langs as $locale => $qual)
+
+// Work out which locale we want to use
+// Note: the first time this function is called, it should be called with a $header string.
+// Subsequent calls will just return the static $locale variable which was calculated on
+// the first call
+function get_mrbs_locale($header=null)
 {
-  if (strpos($locale, $lang) === 0)
+  global $override_locale, $disable_automatic_language_changing, $default_language_tokens;
+  global $cli_language;
+
+  static $locale = null;
+
+  if (!isset($locale))
   {
-    break;
-  }
-}
-
-//////////////////////////////////////////////////////////////////////
-// Locale handling
-
-$server_os = get_server_os();  // used globally
-
-
-$windows_locale = "eng";
-set_mrbs_locale();
-
-
-
-// Returns a locale in the correct format for the server OS given a language
-// Returns FALSE if no locale can be determined
-function get_os_locale($lang)
-{
-  global $lang_map_unix, $lang_map_unix_postfix, $lang_map_windows;
-  global $server_os;
-  
-  $locale = FALSE;
-  
-  if ($server_os == "windows")
-  {
-    if (array_key_exists(utf8_strtolower($lang), $lang_map_windows))
+    // If we're running from the CLI, use the config setting
+    if (is_cli() && !empty($cli_language))
     {
-      $locale = $lang_map_windows[utf8_strtolower($lang)];
+      $lang = $cli_language;
     }
+    // Otherwise use the override locale if we've been given one
+    if (!empty($override_locale))
+    {
+      $locale = $override_locale;
+    }
+    // Otherwise, if we've been told to use a fixed language, then use that
+    elseif ($disable_automatic_language_changing &&
+            isset($default_language_tokens) &&
+            ($default_language_tokens !== ''))
+    {
+      $locale = $default_language_tokens;
+    }
+    // Otherwise, use the best available language following browser preferences
+    elseif (!empty($header))
+    {
+      $locale = Locale::acceptFromHttp($header);
+    }
+    // If there aren't any browser preferences, use English
     else
     {
-      $message = "Server failed to map browser language '$lang' to a Windows locale specifier";
-      trigger_error($message, E_USER_NOTICE);
+      $locale = 'en';
     }
-  }
-  /* All of these Unix OSes work in mostly the same way... */
-  else if (in_array($server_os, array('linux', 'sunos', 'bsd', 'aix', 'macosx')))
-  {
-    if (strlen($lang) == 2)
-    {
-      if (isset($lang_map_unix[$lang]) && ($lang_map_unix[$lang]))
-      {
-        $locale = $lang_map_unix[$lang];
-      }
-      else
-      {
-        // Convert locale=xx to xx_XX
-        $locale = utf8_strtolower($lang) . "_" . utf8_strtoupper($lang);
-      }
-    }
-    else
-    {
-      // First, if we have a map, use it
-      if (isset($lang_map_unix[utf8_strtolower($lang)]))
-      {
-        $locale = $lang_map_unix[utf8_strtolower($lang)];
-      }
-      else
-      {
-        // Convert locale=xx-xX or xx_Xx or xx_XxXx (etc.) to xx_XX[XX]; this is highly
-        // dependent on the machine's installed locales
-        $locale = locale_format($lang, '_');
-      }
-    }
-    switch ($server_os)
-    {
-      case "sunos":
-      case "linux":
-      case "bsd":
-        $locale .= ".UTF-8";
-        if (isset($lang_map_unix_postfix[$locale]))
-        { 
-          $locale .= $lang_map_unix_postfix[$locale];
-        }
-        break;
 
-      case "macosx":
-        $locale .= ".utf-8";
-        break;
-      default:
-        break;
-    }
+    // Convert it to BCP 47 format (eg convert 'en_US' to 'en-US')
+    $locale = convert_to_BCP47($locale);
   }
+
   return $locale;
 }
 
-// Works out what locale should be used by MRBS depending on the config settings
-// and the user's browser preferences.
-// Returns the locale, or FALSE if no locale can be determined
-function determine_mrbs_locale()
+
+// Returns a simple array of BCP 47 language tags in decreasing order of preference.  This
+// is designed for use with third party libraries (eg datepickers, datatables) where the
+// locale used by MRBS, and given by get_mrbs_locale(), may not be available.  So this function
+// returns as wide a list of languages as possible, in the hope that one of them may be
+// supported by the third party library.
+function get_lang_preferences()
 {
+  global $cli_language, $disable_automatic_language_changing, $default_language_tokens;
   global $override_locale;
-  global $locale, $windows_locale;
+  global $aliased_header;
 
-  if (isset($override_locale) && ($override_locale !== ''))
+  static $lang_preferences = null;
+
+  if (!isset($lang_preferences))
   {
-    $mrbs_locale = $override_locale;
+    // Use the aliased browser preferences, if any, as a base.    Although we may add
+    // higher priority languages later, these are a useful fall-back on the grounds
+    // that it's better to have some language rather than none.
+    $lang_preferences = get_browser_langs($aliased_header, true);
+
+    // If we've been told not to use the browser languages then the default
+    // language is more important
+    if ($disable_automatic_language_changing &&
+        isset($default_language_tokens) &&
+        ($default_language_tokens) !== '')
+    {
+      array_unshift($lang_preferences, $default_language_tokens);
+    }
+
+    // If there's an override locale then that's more important still
+    if (!empty($override_locale))
+    {
+      array_unshift($lang_preferences, $override_locale);
+    }
+
+    // If we're running from the CLI then put the CLI language at the top
+    if (is_cli() && !empty($cli_language))
+    {
+      array_unshift($lang_preferences, $cli_language);
+    }
+
+    // Add the default language tokens as a fallback
+    if (isset($default_language_tokens) && ($default_language_tokens !== ''))
+    {
+      array_push($lang_preferences, $default_language_tokens);
+    }
+
+    // Finally, add a backstop at the very bottom of the list
+    array_push($lang_preferences, 'en');
   }
-  else
-  {
-    $mrbs_locale = get_os_locale($locale);
-  }
-  $windows_locale = $mrbs_locale;
-  
-  return $mrbs_locale;
+
+  return $lang_preferences;
 }
 
 
-// Sets the locale according to the MRBS config settings and the user's
-// browser preferences
-function set_mrbs_locale()
+// Note: the first time this function is called, it should be called with a $locale.
+// Subsequent calls will just return the static $locale variable which was calculated on
+// the first call
+function get_mrbs_lang($locale=null)
 {
-  static $locale = '';
-  static $have_locale = FALSE;
-  static $have_valid_locale = FALSE;
-  
-  // If we've tried this before and have got a good locale, then set it.
-  if ($have_locale)
+  global $disable_automatic_language_changing,
+         $default_language_tokens,
+         $cli_language;
+
+  static $lang = null;
+
+  if (!isset($lang))
   {
-    if ($have_valid_locale)
+    // If we're running from the CLI, use the config setting
+    if (is_cli() && !empty($cli_language))
     {
-      setlocale(LC_ALL, $locale);
+      $lang = $cli_language;
     }
-    return;
-  }
-  // Otherwise work out what the locale should be and set it.
-  $locale = determine_mrbs_locale();
-  $have_locale = TRUE;
-  if ($locale !== FALSE)
-  {
-    $have_valid_locale = (setlocale(LC_ALL, $locale) !== FALSE);
-    if (!$have_valid_locale)
+    // Otherwise, if we've been told to use a fixed language, then use that
+    elseif ($disable_automatic_language_changing &&
+            isset($default_language_tokens) &&
+            ($default_language_tokens !== ''))
     {
-      $message = "Server failed to set locale to '$locale'";
-      trigger_error($message, E_USER_NOTICE);
+      $lang = $default_language_tokens;
+    }
+    // Otherwise, use the best available language following browser preferences
+    elseif (isset($locale))
+    {
+      $available_languages = get_langtags(MRBS_ROOT . '/lang', 'lang.');
+      $lang = Locale::lookup($available_languages, $locale, false, $default_language_tokens);
     }
   }
+
+  return $lang;
 }
 
 
-// Returns an array of language qualifiers with the language key replaced
-// by its alias, if one exists
-function alias_qualifiers($qualifiers)
+// Returns a version of the Accept-Language request HTTP header with language
+// strings substituted for their aliases
+function alias_header($header, array $aliases)
 {
-  global $lang_aliases;
-  
+  if (!empty($aliases))
+  {
+    $patterns = array();
+    $replacements = array();
+
+    foreach ($aliases as $key => $value)
+    {
+      $patterns[] = "/(?<=^|,)($key)(?=,|;|$)/i";
+      $replacements[] = $value;
+    }
+
+    $header = preg_replace($patterns, $replacements, $header);
+  }
+
+  return $header;
+}
+
+
+// Returns a sorted associative array of acceptable language qualifiers, indexed
+// by language, given an Accept-Language header string.
+// If $translate_wildcard is set then the wildcard language identifier ('*') is
+// translated to a standard language - we use 'en'.
+function get_qualifiers($header, $translate_wildcard=false)
+{
   $result = array();
-  foreach ($qualifiers as $lang => $qualifier)
+
+  if (!empty($header))
   {
-    if (isset($lang_aliases[utf8_strtolower($lang)]))
+    $lang_specifiers = explode(',', $header);
+
+    foreach ($lang_specifiers as $specifier)
     {
-      $result[$lang_aliases[utf8_strtolower($lang)]] = $qualifier;
-    }
-    else
-    {
-      $result[$lang] = $qualifier;
+      unset($weight);
+      $specifier = trim($specifier);
+
+      // The regular expressions below are not tight definitions of permissible language tags.
+      // They let through some tags which are not permissible, but they do allow permissible
+      // tags such as 'es-419'.
+      if (preg_match('/^([a-zA-Z0-9\-]+|\*);q=([0-9.]+)$/', $specifier, $matches))
+      {
+        $language = $matches[1];
+        $weight = (float) $matches[2];
+      }
+      else if (preg_match('/^([a-zA-Z0-9\-]+|\*)$/', $specifier, $matches))
+      {
+        $language = $matches[1];
+        $weight = 1.0;
+      }
+      else
+      {
+        trigger_error("Unexpected specifier format '$specifier'", E_USER_NOTICE);
+      }
+
+      if (isset($weight))
+      {
+        if ($translate_wildcard && ($language == '*'))
+        {
+          // Handle the wildcard language by using English
+          $language = 'en';
+        }
+        // If a language occurs twice (possibly as a result of a wildcard or aliasing) then
+        // only change the weight if it's greater than the one we've already got.
+        if (!isset($result[$language]) || ($weight > $result[$language]))
+        {
+          $result[$language] = $weight;
+        }
+      }
     }
   }
+
+  arsort($result, SORT_NUMERIC);
+
   return $result;
 }
 
-
-// Returns an unsorted associative array of acceptable language qualifiers, indexed
-// by language.   The language will have been replaced its alias if one exists.
-function get_language_qualifiers()
+// Returns a string of acceptable languages, sorted in decreasing order of preference
+// If $translate_wildcard is set then the wildcard language identifier ('*') is
+// translated to a standard language - we use 'en'.
+function get_browser_langs($header, $translate_wildcard=false)
 {
-  global $cli_mode, $cli_language,
-         $default_language_tokens, $disable_automatic_language_changing,
-         $HTTP_ACCEPT_LANGUAGE;
-  
-  static $qualifiers;
-  
-  if (isset($qualifiers))
-  {
-    return $qualifiers;
-  }
-  
-  $qualifiers = array();
-  
-  // If we're running from the CLI, use the config setting
-  if ($cli_mode && !empty($cli_language))
-  {
-    $qualifiers[$cli_language] = 1.0;
-  }
-  // Otherwise, if we've disabled automatic language changing use the default
-  elseif ($disable_automatic_language_changing)
-  {
-    $qualifiers[$default_language_tokens] = 1.0;
-  }
-  // Otherwise, we enumerate the user's language preferences...
-  elseif (isset($HTTP_ACCEPT_LANGUAGE)) // Attempt to use $HTTP_ACCEPT_LANGUAGE only when defined.
-  {
-    $lang_specifiers = explode(',',$HTTP_ACCEPT_LANGUAGE);
-    foreach ($lang_specifiers as $specifier)
-    {
-      if (preg_match('/([a-zA-Z\-]+);q=([0-9\.]+)/', $specifier, $matches))
-      {
-        $qualifiers[$matches[1]] = (float) $matches[2];
-      }
-      else if (preg_match("/([a-zA-Z\-]+)/", $specifier, $matches))
-      {
-        $qualifiers[$matches[1]] = 1.0;
-      }
-    }
-  }
-  // Else use the value from config.inc.php
-  else 
-  {
-    $qualifiers[$default_language_tokens] = 1.0;
-  }
-  
-  return $qualifiers;
+  return array_keys(get_qualifiers($header, $translate_wildcard));
 }
 
 
-// Get the best fit language file from $dir given the set of language preferences
-//   $lang_preferences (an associative array language => quality_value).
-//   $default_langtags is an array of languages that are already built into the system
-//     and do not need an explicit regional setting.
-//   $lang_map is an associative array that maps a filename (less prefix and suffix)
-//     onto a language tag, for example array('English' => 'en').  Useful when the localisation
-//     files do not follow a language tag naming scheme.
-//
-// The file names are assumed to be of the form $prefix . $lang . $suffix, eg 
-// 'datepicker-en-GB.js'
-function get_best_lang_file($lang_preferences, $dir, $prefix, $suffix, $default_langtags=NULL, $lang_map=NULL)
+// Gets all the language tags in a directory where the filenames are of the format
+// $prefix . $lang . $suffix.  Returns an array.
+function get_langtags($dir, $prefix='', $suffix='')
 {
-  global $default_language_tokens;
-  
+  $result = array();
+
   if (!is_dir($dir))
   {
-    trigger_error("MRBS: directory $dir does not exist", E_USER_NOTICE);
-    return NULL;
+    trigger_error("MRBS: directory '$dir' does not exist", E_USER_NOTICE);
+    return $result;
   }
-  
-  // Get the available languages
+
   $files = scandir($dir);
-  if (!isset($default_langtags))
-  {
-    $default_langtags = array(); 
-  } 
-  $available_langtags = $default_langtags;
-  
+
   foreach ($files as $file)
   {
-    // . and .. will be included in the output of scandir(), so 
-    // we need to exclude them
-    if (!is_dir($dir . '/' . $file))
+    $path = $dir . '/' . $file;
+    // . and .. will be included in the output of scandir(), so
+    // we need to exclude them.  We also want to exclude files
+    // that we can't read.
+    if (!is_dir($path) && is_readable($path))
     {
       // Then strip out the language tag from the file name
       $pattern = sprintf('/%s(.+)%s/i', $prefix, $suffix);
@@ -944,35 +469,76 @@ function get_best_lang_file($lang_preferences, $dir, $prefix, $suffix, $default_
       {
         if (isset($matches[1]))
         {
-          $langtag = $matches[1];
-          $available_langtags[] = (isset($lang_map) && isset($lang_map[$langtag])) ? $lang_map[$langtag] : $langtag;
+          $result[] = $matches[1];
         }
       }
     }
   }
-  
-  // Add the default language to the bottom of the list as a backstop (unless
-  // it's in the list already
-  if (isset($default_language_tokens) && ($default_language_tokens !== ''))
+
+  return $result;
+}
+
+
+// Get the best fit language file from $dir given the set of language preferences.  Returns NULL
+// if none available.
+//   $default_langtags is an array of languages that are already built into the system
+//     and do not need an explicit regional setting.
+//   $lang_map is an associative array that maps a filename (less prefix and suffix)
+//     onto a language tag, for example array('English' => 'en').  Useful when the localisation
+//     files do not follow a language tag naming scheme.
+//
+// The file names are assumed to be of the form $prefix . $lang . $suffix, eg
+// 'datepicker-en-GB.js'
+function get_best_lang_file($dir, $prefix='', $suffix='', array $default_langtags=null, array $lang_map=null)
+{
+  global $default_language_tokens;
+
+  if (!is_dir($dir))
   {
-    if (!isset($lang_preferences[$default_language_tokens]))
+    trigger_error("MRBS: directory $dir does not exist", E_USER_NOTICE);
+    return null;
+  }
+
+  $lang_preferences = get_lang_preferences();
+
+  // Get the available languages
+  $available_langtags = get_langtags($dir, $prefix, $suffix);
+
+  // Translate the non-standard names into BCP 47 tags
+  if (isset($lang_map))
+  {
+    foreach($available_langtags as $langtag)
     {
-      $lang_preferences[$default_language_tokens] = 0.0;
+      if (isset($lang_map[$langtag]))
+      {
+        // Replace langtag with its mapping
+        array_splice($available_langtags,
+                     array_search($langtag, $available_langtags),
+                     1,
+                     $lang_map[$langtag]);
+      }
     }
   }
-  
+
+  // Merge in the default languages
+  if (isset($default_langtags))
+  {
+    $available_langtags = array_unique(array_merge($available_langtags, $default_langtags));
+  }
+
   // Find the best fit.
-  foreach ($lang_preferences as $lang => $qual)
+  foreach ($lang_preferences as $lang)
   {
     // For some reason the third parameter to Locale::lookup() is mandatory in 5.3.0.
     // Can't see anything about it in the manual - must be a bug that was fixed in
     // later versions.
-    $locale = \Locale::lookup($available_langtags, $lang, $canonicalize = FALSE);
+    $locale = Locale::lookup($available_langtags, $lang, $canonicalize = false);
+
     if (!empty($locale))
     {
-      if (in_array($locale, $default_langtags))
+      if (isset($default_langtags) && in_array($locale, $default_langtags))
       {
-        return NULL;
+        return null;
       }
       $filename_body = (isset($lang_map)) ? array_search($locale, $lang_map) : false;
       $filename_body = ($filename_body === false) ? $locale : $filename_body;
@@ -980,31 +546,31 @@ function get_best_lang_file($lang_preferences, $dir, $prefix, $suffix, $default_
     }
   }
 
-  return NULL;  // We failed to find anything acceptable
+  return null;  // We failed to find anything acceptable
 }
 
 
-// Returns the pathname of the language file to use for the jQuery UI
+// Returns the pathname of the language file to use for the flatpickr
 // datepicker.    If no suitable language file exists then returns NULL
 // $dir is the directory containing the language files
-function get_datepicker_lang_file($dir)
+function get_flatpickr_lang_file($dir)
 {
-  global $langs;
-  
-  // 'en' and 'en-US' are the default settings and are built into the main
-  // datepicker.js code, so are always available.
-  $file = get_best_lang_file($langs, 'jquery/ui/i18n', 'datepicker-', '.js', array('en', 'en-US'));
-  
-  if (isset($file))
-  {
-    return $dir . '/' . $file;
-  }
-  else
-  {
-    return NULL;
-  }
+  global $flatpickr_lang_map;
+
+  return get_best_lang_file($dir, '', '.js', null, $flatpickr_lang_map);
 }
-  
+
+
+// Given a flatpickr localisation, find the corresponding property for
+// use with flatpickr.localize
+function get_flatpickr_property($lang_file)
+{
+  global $flatpickr_property_map;
+
+  $basename = basename($lang_file, '.js');
+
+  return (isset($flatpickr_property_map[$basename])) ? $flatpickr_property_map[$basename] : $basename;
+}
 
 
 // Returns the pathname of the language file to use for the dataTables
@@ -1012,45 +578,29 @@ function get_datepicker_lang_file($dir)
 // $dir is the directory containing the language files
 function get_datatable_lang_file($dir)
 {
-  global $langs, $datatable_lang_map;
-  
-  $file = get_best_lang_file($langs, $dir, '', '.lang', NULL, $datatable_lang_map);
-  
-  if (isset($file))
-  {
-    return $dir . '/' . $file;
-  }
-  else
-  {
-    return NULL;
-  }
+  global $datatables_lang_map;
+
+  return get_best_lang_file($dir, '', '.lang', null, $datatables_lang_map);
 }
 
 
-// Set $vocab.   Returns TRUE if a lang file is found, otherwise FALSE
+// Set $vocab to $lang.  As some translations are incomplete, 'en' is set as a
+// fallback language.   Returns TRUE if a lang file is found, otherwise FALSE.
 function set_vocab($lang)
 {
-  global $vocab_override, $cli_mode;
-  global $PHP_SELF;
-  global $vocab, $mrbs_admin, $mrbs_company;  // Used in lang files
-  
+  global $vocab, $vocab_override;
+
+  // Set English as a fallback language as some of the translations are
+  // incomplete.
+  if ($lang != 'en')
+  {
+    set_vocab('en');
+  }
+
   $lang = utf8_strtolower($lang);
 
-  $lang_file = "lang/lang.$lang";
-  
-  if ($cli_mode)
-  {
-    // When in CLI mode, we need to add the full path name as
-    // is_readable() ignores the include path
-    $lang_file = dirname($PHP_SELF) . "/" . $lang_file;
-  }
-  elseif (!is_readable('lang'))
-  {
-    // The JavaScript files in the js directory end up including language.inc.
-    // In this case we need to adjust the path
-    $lang_file = "../lang/lang.$lang";
-  }
-  
+  $lang_file = MRBS_ROOT . "/lang/lang.$lang";
+
   if (is_readable($lang_file))
   {
     // Get the standard language tokens
@@ -1063,9 +613,10 @@ function set_vocab($lang)
         $vocab[$tag] = $str;
       }
     }
-    return TRUE;
+    return true;
   }
-  return FALSE;
+
+  return false;
 }
 
 
@@ -1099,7 +650,7 @@ function get_csv_charset()
 function get_lang()
 {
   global $lang;
-  
+
   return $lang;
 }
 
@@ -1121,65 +672,6 @@ function get_bom($charset)
 }
 
 
-function get_server_os()
-{
-  if (stristr(PHP_OS,"Darwin"))
-  {
-    return "macosx";
-  }
-  else if (stristr(PHP_OS, "WIN"))
-  {
-    return "windows";
-  }
-  else if (stristr(PHP_OS, "Linux"))
-  {
-    return "linux";
-  }
-  else if (stristr(PHP_OS, "BSD"))
-  {
-    return "bsd";
-  }
-  else if (stristr(PHP_OS, "SunOS"))
-  {
-    return "sunos";
-  }
-  else if (stristr(PHP_OS, "AIX"))
-  {
-    return "aix";
-  }
-  else
-  {
-    return "unsupported";
-  }
-}
-
-// Translates a GNU libiconv character encoding name to its corresponding IBM AIX libiconv character
-// encoding name. Returns FALSE if character encoding name is unknown.
-function get_aix_character_encoding($character_encoding)
-{
-  global $gnu_iconv_to_aix_iconv_codepage_map;
-
-  // Check arguments
-  if ($character_encoding == NULL ||
-      !is_string($character_encoding) ||
-      empty($character_encoding))
-  {
-    return FALSE;
-  }
-
-  // Convert character encoding name to lowercase
-  $character_encoding = utf8_strtolower($character_encoding);
-
-  // Check that we know of an IBM AIX libiconv character encoding name equivalent for this character encoding name
-  if (!array_key_exists($character_encoding, $gnu_iconv_to_aix_iconv_codepage_map))
-  {
-    return FALSE;
-  }
-
-  return $gnu_iconv_to_aix_iconv_codepage_map[$character_encoding];
-}
-
-
 // Get a vocab item, in UTF-8
 // Takes additional parameters as for sprintf()
 //
@@ -1189,15 +681,16 @@ function get_aix_character_encoding($character_encoding)
 function get_vocab($tag)
 {
   global $vocab;
-  
+
   // Return the tag itself if we can't find a vocab string
   if (!isset($vocab[$tag]))
   {
     return $tag;
   }
-  
+
   $args = func_get_args();
   $args[0] = $vocab[$tag];
+
   return call_user_func_array('sprintf', $args);
 }
 
@@ -1205,14 +698,24 @@ function get_vocab($tag)
 // Same as get_vocab(), but uses the mailing language
 function get_mail_vocab($tag)
 {
-  global $mail_vocab;
+  global $vocab, $mail_settings;
+
+  static $mail_vocab = null;
+
+  if (!isset($mail_vocab))
+  {
+    $web_vocab = $vocab;   // Save $vocab before it gets overwritten
+    set_vocab($mail_settings['admin_lang']);
+    $mail_vocab = $vocab;
+    $vocab = $web_vocab;  // Restore $vocab
+  }
 
   // Return the tag itself if we can't find a vocab string
   if (!isset($mail_vocab[$tag]))
   {
     return $tag;
   }
-  
+
   $args = func_get_args();
   $args[0] = $mail_vocab[$tag];
   $result = call_user_func_array('sprintf', $args);
@@ -1235,92 +738,28 @@ function get_type_vocab($type)
 function get_loc_field_name($table, $name)
 {
   global $vocab, $db_tbl_prefix;
-  
+
   $tag = utf8_substr($table, utf8_strlen($db_tbl_prefix));  // strip the prefix off the table name
   $tag .= "." . $name;           // add on the fieldname
+
   // then if there's a string in the vocab array for $tag use that
   // otherwise just use the fieldname
   return (isset($vocab[$tag])) ? get_vocab($tag) : $name;
 }
 
 
-// AIX version of utf8_convert(); needed as locales won't give us UTF-8
-// NOTE: Should ONLY be called with input encoded in the default code set of the current locale!
-// NOTE: Uses the LC_TIME category for determining the current locale setting, so should preferrably be used on date/time input only!
-function utf8_convert_aix($string, $aix_locale = NULL)
+// optionally switch to a new locale, switching back at the end.
+// $temp_locale can either be a string or an array of locales.
+function utf8_strftime($format, $time, $temp_locale=null)
 {
-  global $aixlocale_codepage_map, $aix_utf8_converters;
+  $server_os = System::getServerOS();
 
-  if (!isset($aix_locale))
-  {
-    // Retrieve current locale setting
-    $aix_locale = setlocale(LC_TIME, '0');
-  }
-
-  if ($aix_locale === FALSE)
-  {
-    // Locale setting could not be retrieved; return string unchanged
-    return $string;
-  }
-
-  if (!array_key_exists($aix_locale, $aixlocale_codepage_map))
-  {
-    // Default code page of locale could not be found; return string unchanged
-    return $string;
-  }
-
-  $aix_codepage = $aixlocale_codepage_map[$aix_locale];
-
-  if (!in_array($aix_codepage, $aix_utf8_converters, TRUE))
-  {
-    // No suitable UTF-8 converter was found for this code page; return string unchanged
-    return $string;
-  }
-
-  // Convert string to UTF-8
-  $aix_string = iconv($aix_codepage, 'UTF-8', $string);
-
-  // Default to original string if conversion failed
-  $string = ($aix_string === FALSE) ? $string : $aix_string;
-
-  return $string;
-}
-
-
-function utf8_convert_from_locale($string, $locale=NULL)
-{
-  global $windows_locale, $winlocale_codepage_map, $server_os;
-
-  if ($server_os == "windows")
-  {
-    if (!isset($locale))
-    {
-      $locale = $windows_locale;
-    }
-    if (array_key_exists($locale, $winlocale_codepage_map))
-    {
-      $string = iconv($winlocale_codepage_map[$locale],"utf-8",
-                      $string);
-    }
-  }
-  else if ($server_os == "aix")
-  {
-    $string = utf8_convert_aix($string, $locale);
-  }
-  return $string;
-}
-
-
-//  optionally switch to a new locale, switching back at the end
-function utf8_strftime($format, $time, $temp_locale=NULL)
-{
-  global $server_os;
-
-  // Set the temporary locale
+  // Set the temporary locale.  Note that $temp_locale could be an array of locales,
+  // so we need to find out which locale actually worked.
   if (!empty($temp_locale))
   {
     $old_locale = setlocale(LC_TIME, '0');
-    setlocale(LC_TIME, $temp_locale);
+    $new_locale = setlocale(LC_TIME, $temp_locale);
   }
   elseif ($server_os == "windows")
   {
@@ -1328,15 +767,20 @@ function utf8_strftime($format, $time, $temp_locale=NULL)
     // running in the same process has changed the locale since we first set it.  See the
     // warning on the PHP manual page for setlocale():
     //
-    // "The locale information is maintained per process, not per thread. If you are 
+    // "The locale information is maintained per process, not per thread. If you are
     // running PHP on a multithreaded server API like IIS or Apache on Windows, you may
     // experience sudden changes in locale settings while a script is running, though
     // the script itself never called setlocale(). This happens due to other scripts
     // running in different threads of the same process at the same time, changing the
     // process-wide locale using setlocale()."
-    set_mrbs_locale();
+    $new_locale = get_mrbs_locale();
+    set_mrbs_locale($new_locale);
   }
-  
+  else
+  {
+    $new_locale = null;
+  }
+
   if ($server_os == "windows")
   {
     // Some formats not supported on Windows.   Replace with suitable alternatives
@@ -1345,7 +789,7 @@ function utf8_strftime($format, $time, $temp_locale=NULL)
     $format = str_replace("%l", "%I", $format);
     $format = str_replace("%e", "%#d", $format);
   }
-  
+
   // %p doesn't actually work in some locales, we have to patch it up ourselves
   if (preg_match('/%p/', $format))
   {
@@ -1359,14 +803,14 @@ function utf8_strftime($format, $time, $temp_locale=NULL)
   }
 
   $result = strftime($format, $time);
-  $result = utf8_convert_from_locale($result, $temp_locale);
-  
+  $result = System::utf8ConvertFromLocale($result, $new_locale);
+
   // Restore the original locale
   if (!empty($temp_locale))
   {
     setlocale(LC_TIME, $old_locale);
   }
-  
+
   return $result;
 }
 
@@ -1387,7 +831,7 @@ function utf8_substr_old($str,$start)
 
 
 // UTF-8 compatible substr function
-function utf8_substr($str, $start, $length=NULL)
+function utf8_substr($str, $start, $length=null)
 {
   if (!isset($length))
   {
@@ -1408,16 +852,25 @@ function utf8_substr($str, $start, $length=NULL)
 
     return mb_substr($str, $start, $length, $encoding);
   }
+
   if (strlen($str) > 1000)
   {
     // If the string is long, the old routine is quicker. :(
-    
+
     return utf8_substr_old($str, $start, $length);
+  }
+
+  // Deal with the trivial cases first, which won't be dealt with properly otherwise
+  // below, due to the dummy string we have to use to convince PHP to treat the result as
+  // a string rather than an array.
+  if (($str === '') || ($length === 0))
+  {
+    return '';
   }
 
   $i = 0;
   $index = 0;
-  while ((ord($str[$index]) != 0) && ($i < $start))
+  while (isset($index) && isset($str[$index]) && (ord($str[$index]) != 0) && ($i < $start))
   {
     $index = utf8_next_index($str, $index);
     $i++;
@@ -1425,8 +878,9 @@ function utf8_substr($str, $start, $length=NULL)
 
   if (!isset($index))
   {
-    return NULL;
+    return '';
   }
+
   if (func_num_args() >= 3)
   {
     $end_index = $index;
@@ -1438,11 +892,11 @@ function utf8_substr($str, $start, $length=NULL)
       $j++;
     }
     $j = 0;
-    $ret = "."; // dummy to fool PHP
+    $ret = '.';  // Dummy to fool PHP. If we us an empty string it thinks it's an array.
     for ($i = $index;
-         (ord($str[$i]) != 0) && (!isset($end_index) || ($i < $end_index));
+         isset($str[$i]) && (ord($str[$i]) != 0) && (!isset($end_index) || ($i < $end_index));
          $i++)
-    { 
+    {
       $ret[$j++] = $str[$i];
     }
     return $ret;
@@ -1450,8 +904,8 @@ function utf8_substr($str, $start, $length=NULL)
   else
   {
     $j = 0;
-    $ret = "."; // dummy to fool PHP
-    for ($i = $index; ord($str[$i]) != 0; $i++)
+    $ret = '.';  // Dummy to fool PHP. If we us an empty string it thinks it's an array.
+    for ($i = $index; isset($str[$i]) && (ord($str[$i]) != 0); $i++)
     {
       $ret[$j++] = $str[$i];
     }
@@ -1481,7 +935,7 @@ function utf8_bytecount($str)
 // removed from the front
 function utf8_next($str)
 {
-  $ret = NULL;
+  $ret = null;
 
   if (isset($str))
   {
@@ -1490,8 +944,8 @@ function utf8_next($str)
     if ($index)
     {
       $i = 0;
-      $ret = "."; // dummy to fool PHP
-      while (ord($str[$index]) != 0)
+      $ret = '.';  // Dummy to fool PHP. If we us an empty string it thinks it's an array.
+      while (isset($str[$index]) && ord($str[$index]) != 0)
       {
         $ret[$i++] = $str[$index++];
       }
@@ -1506,11 +960,11 @@ function utf8_next($str)
 // of the string is encountered, the function returns NULL
 function utf8_next_index($str, $start)
 {
-  $ret = NULL;
+  $ret = null;
 
   $i = $start;
 
-  if (isset($str))
+  if (isset($str) && isset($str[$i]))
   {
     if (ord($str[$i]) < 0xc0)
     {
@@ -1519,7 +973,7 @@ function utf8_next_index($str, $start)
     else
     {
       $i++;
-      while ((ord($str[$i]) & 0xc0) == 0x80)
+      while (isset($str[$i]) && ((ord($str[$i]) & 0xc0) == 0x80))
       {
         $i++;
       }
@@ -1539,7 +993,7 @@ function utf8_next_index($str, $start)
 // last sequence is returned, and the byte index set to NULL
 function utf8_seq($str, &$byte_index)
 {
-  $ret = "."; // dummy to fool PHP
+  $ret = '.';  // Dummy to fool PHP. If we us an empty string it thinks it's an array.
 
   $next = utf8_next_index($str, $byte_index);
 
@@ -1571,7 +1025,7 @@ function utf8_to_utf16($string)
 {
   $ucs2 = array();
   $byte_index = 0;
-      
+
   while (!is_null($byte_index))
   {
     $next = utf8_seq($string, $byte_index);
@@ -1605,10 +1059,10 @@ function utf8_to_utf16($string)
       array_push($ucs2, $ucs);
       continue;
     }
-        
+
     $cn = ord($next[3]) ^ 0x80;
     $ucs = ($ucs << 6) | $cn;
-    
+
     // Four byte codes: 11110xxx 10xxxxxxx 10xxxxxx 10xxxxxx
     if ($c0 < 0xF8)
     {
@@ -1663,6 +1117,7 @@ function utf8_strtolower($str)
   {
     return mb_strtolower($str);
   }
+
   return strtolower($str);
 }
 
@@ -1678,22 +1133,4 @@ function utf8_strtoupper($str)
     return mb_strtoupper($str);
   }
   return strtoupper($str);
-}
-
-
-// Format a locale which could be xx-xX or xx_Xx or xx_XxXx (etc.) into a
-// standardised format consiting of a lower case language followed, if applicable,
-// by an upper case country, separated by $separator.    Typically the separator
-// will be '-' or '_'.
-function locale_format($locale, $separator)
-{
-  if (strlen($locale) == 2)
-  {
-    $locale = utf8_strtolower($locale);
-  }
-  else
-  {
-    $locale = utf8_strtolower(substr($locale,0,2)) . $separator . utf8_strtoupper(substr($locale,3));
-  }
-  return $locale;
 }

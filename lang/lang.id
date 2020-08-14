@@ -19,7 +19,7 @@ $vocab["help"]               = "Bantuan";
 $vocab["search"]             = "Pencarian";
 $vocab["outstanding"]        = "pesanan Tertunda";
 
-// Used in day.php
+// Used in index.php
 $vocab["bookingsfor"]        = "pesanan Untuk";
 $vocab["bookingsforpost"]    = ""; // Goes after the date
 $vocab["areas"]              = "Area";
@@ -27,9 +27,19 @@ $vocab["daybefore"]          = "Kemarin";
 $vocab["dayafter"]           = "Besok";
 $vocab["gototoday"]          = "Hari Ini";
 $vocab["goto"]               = "Pergi Ke";
+$vocab["nav_day"]            = "Hari";
+$vocab["nav_week"]           = "Minggu";
+$vocab["nav_month"]          = "Bulan";
 $vocab["highlight_line"]     = "Stabilo baris ini";
 $vocab["click_to_reserve"]   = "Klik pada cell untuk reservasi.";
 $vocab["timezone"]           = "Zona Waktu";
+$vocab["weekbefore"]         = "Pindah ke satu minggu sebelum";
+$vocab["weekafter"]          = "Pindah ke satu minggu kedepan";
+$vocab["gotothisweek"]       = "Pindah ke minggu ini";
+$vocab["monthbefore"]        = "Pindah ke satu bulan sebelum";
+$vocab["monthafter"]         = "Pindah ke satu bulan kedepan";
+$vocab["gotothismonth"]      = "Pindah ke bulan ini";
+$vocab["no_rooms_for_area"]  = "Ruangan pada area ini belum dibuat";
 
 // Used in trailer.inc
 $vocab["viewday"]            = "Tampilan Hari";
@@ -59,9 +69,9 @@ $vocab["minute_lc"]               = "Menit";
 $vocab["minutes"]                 = "Menit";
 $vocab["hour_lc"]                 = "Jam";
 $vocab["hours"]                   = "Jam";
-$vocab["day_lc"]                  = "Hari";
+$vocab["day"]                     = "Hari";
 $vocab["days"]                    = "Hari";
-$vocab["week_lc"]                 = "Minggu";
+$vocab["week"]                    = "Minggu";
 $vocab["weeks"]                   = "Minggu";
 $vocab["year_lc"]                 = "Tahun";
 $vocab["years"]                   = "Tahun";
@@ -89,17 +99,14 @@ $vocab["ord_-4"]                  = "keempat terakhir";
 $vocab["ord_-5"]                  = "kelima terakhir";
 $vocab["rep_end_date"]            = "Ulangi tanggal akhir";
 $vocab["rep_rep_day"]             = "Ulangi hari";
-$vocab["rep_freq"]                = "Frekuensi";
-$vocab["rep_num_weeks"]           = "Ulangi Setiap";
+$vocab["rep_interval"]            = "Ulangi Setiap";
 $vocab["month_absolute"]          = "Pada hari";
 $vocab["month_relative"]          = "Pada";
 $vocab["skip_conflicts"]          = "Abaikan konflik terdahulu";
 $vocab["ctrl_click"]              = "Gunakan ctrl+click untuk memilih lebih dari satu ruangan";
 $vocab["entryid"]                 = "Entri ID";
 $vocab["repeat_id"]               = "Ulangi ID";
-$vocab["you_have_not_entered"]    = "Anda tidak memasukkan sebuah";
 $vocab["brief_description"]       = "Deskripsi singkat ";
-$vocab["useful_n-weekly_value"]   = "Frekuensi pengulangan yg dianggap berguna";
 $vocab["status"]                  = "Status";
 $vocab["public"]                  = "Publik";
 $vocab["private"]                 = "Privat";
@@ -161,10 +168,10 @@ $vocab["failed_to_acquire"]          = "Gagal mengakuisisi akses database eksklu
 $vocab["invalid_booking"]            = "pesanan tidak valid";
 $vocab["must_set_description"]       = "Anda harus menset deskripsi singkat untuk pesanan. Silahkan kembali dan lengkapi.";
 $vocab["no_rooms_selected"]          = "Anda harus memilih ruangan.";
-$vocab["mail_subject_approved"]      = "Entri $mrbs_company disetujui oleh Sistem";
-$vocab["mail_subject_rejected"]      = "Entri $mrbs_company ditolak oleh Sistem";
-$vocab["mail_subject_more_info"]     = "$mrbs_company Sistem: Informasi selengkapnya telah diminta";
-$vocab["mail_subject_reminder"]      = "Pengingat untuk $mrbs_company Sistem";
+$vocab["mail_subject_approved"]      = "Entri %s disetujui oleh Sistem"; // $mrbs_company
+$vocab["mail_subject_rejected"]      = "Entri %s ditolak oleh Sistem"; // $mrbs_company
+$vocab["mail_subject_more_info"]     = "%s Sistem: Informasi selengkapnya telah diminta"; // $mrbs_company
+$vocab["mail_subject_reminder"]      = "Pengingat untuk %s Sistem"; // $mrbs_company
 $vocab["mail_body_approved"]         = "Sebuah entri baru saja disetujui oleh administrator; Berikut ini detailnya:";
 $vocab["mail_body_rej_entry"]        = "Sebuah entri baru saja ditolak oleh administrator, Berikut ini detailnya:";
 $vocab["mail_body_more_info"]        = "Administrator membutuhkan informasi lebih lengkap terkait entri ini; Berikut ini detailnya:";
@@ -172,15 +179,14 @@ $vocab["mail_body_reminder"]         = "Pengingat - Sebuah entri sedang menunggu
 $vocab["mail_body_repeats_booked"]   = "Tanggal berikut sudah dipesan:";
 $vocab["mail_body_repeats_deleted"]  = "pesanan berikut sudah dihapus:";
 $vocab["mail_body_exceptions"]       = "Tanggal berikut tidak dapat dipesan dikarenakan adanya konflik.:";
-$vocab["mail_subject_new_entry"]     = "Penambahan entri baru untuk $mrbs_company Sistem";
-$vocab["mail_subject_changed_entry"] = "Perubahan entri untuk $mrbs_company Sistem";
-$vocab["mail_subject_delete"]        = "Penghapusan entri untuk $mrbs_company Sistem";
+$vocab["mail_subject_new_entry"]     = "Penambahan entri baru untuk %s Sistem"; // $mrbs_company
+$vocab["mail_subject_changed_entry"] = "Perubahan entri untuk %s Sistem"; // $mrbs_company
+$vocab["mail_subject_delete"]        = "Penghapusan entri untuk %s Sistem"; // $mrbs_company
 $vocab["mail_body_new_entry"]        = "Sebuah entri telah dipesan, Berikut ini detailnya:";
 $vocab["mail_body_changed_entry"]    = "Sebuah entri telah diubah, Berikut ini detailnya:";
 $vocab["mail_body_del_entry"]        = "Sebuah entri telah dihapus, Berikut ini detailnya:";
 $vocab["new_value"]                  = "Baru";
 $vocab["old_value"]                  = "Lawas";
-$vocab["deleted_by"]                 = "Dihapus oleh";
 $vocab["reason"]                     = "Alasan";
 $vocab["info_requested"]             = "Informasi telah dipinta";
 $vocab["min_time_before"]            = "Interval minimum antara hari ini dengan waktu pesanan adalah";
@@ -199,7 +205,6 @@ $vocab["max_per_year_area"]          = "Jumlah pesanan maksimum per tahun per pe
 $vocab["max_per_future_area"]        = "Jumlah sisa pesanan per pengguna untuk area ini adalah";
 $vocab["skip_and_book"]              = "Abaikan dan pesan";
 $vocab["skip_and_book_note"]         = "Lanjutkan pesanan, Abaikan konflik yg ada.";
-$vocab["changes_saved"]              = "Perubahan telah disimpan.";
 
 // Used in pending.php
 $vocab["pending"]            = "Pesanan menunggu persetujuan";
@@ -221,7 +226,7 @@ $vocab["username_or_email"]  = "Nama Pengguna atau Alamat Email";
 $vocab["database_login"]           = "Login Database";
 $vocab["upgrade_required"]         = "Database perlu diupgrade. Silahkan backup database anda sebelum melanjutkan proses.";
 $vocab["supply_userpass"]          = "Masukkan username dan password yg memiliki hak akses admin.";
-$vocab["contact_admin"]            = "Jika anda bukan Sistem administrator silahkan hubungi $mrbs_admin.";
+$vocab["contact_admin"]            = "Jika anda bukan Sistem administrator silahkan hubungi %s."; // $mrbs_admin
 $vocab["upgrade_to_version"]       = "Mengupgrade versi database";
 $vocab["upgrade_to_local_version"] = "Mengupgrarde ke database versi lokal";
 $vocab["upgrade_completed"]        = "Upgrade database selesai.";
@@ -269,7 +274,6 @@ $vocab["of"]                 = " dari ";
 $vocab["previous"]           = "Sebelumnya";
 $vocab["next"]               = "Berikutnya";
 $vocab["entry"]              = "Entri";
-$vocab["advanced_search"]    = "Pencarian tingkat lanjut";
 $vocab["search_button"]      = "Cari";
 $vocab["search_for"]         = "Cari untuk";
 $vocab["from"]               = "Dari";
@@ -318,19 +322,6 @@ $vocab["delete_entries_warning"] = "PERHATIAN!  Aksi berikut akan menghapus entr
                                    "Jumlah entri yang akan dihapus: ";
 $vocab["delete_entries_failed"] = "Entri tidak dapat dihapus.";
 
-// Used in week.php
-$vocab["weekbefore"]         = "Pindah ke satu minggu sebelum";
-$vocab["weekafter"]          = "Pindah ke satu minggu kedepan";
-$vocab["gotothisweek"]       = "Pindah ke minggu ini";
-
-// Used in month.php
-$vocab["monthbefore"]        = "Pindah ke satu bulan sebelum";
-$vocab["monthafter"]         = "Pindah ke satu bulan kedepan";
-$vocab["gotothismonth"]      = "Pindah ke bulan ini";
-
-// Used in {day week month}.php
-$vocab["no_rooms_for_area"]  = "Ruangan pada area ini belum dibuat";
-
 // Used in admin.php
 $vocab["edit"]               = "Ubah";
 $vocab["delete"]             = "Hapus";
@@ -367,7 +358,6 @@ $vocab["invalid_area"]            = "Area tidak valid!";
 $vocab["invalid_room_name"]       = "Nama ruangan ini sudah pernah digunakan!";
 $vocab["invalid_email"]           = "Alamat surel invalid!";
 $vocab["invalid_resolution"]      = "Kombinasi lost pertama tidak valid, slot terakhir dan resolusi!";
-$vocab["too_many_slots"]          = 'Anda harus menaikkan jumlah $max_slots pada file konfigurasi!';
 $vocab["general_settings"]        = "Umum";
 $vocab["time_settings"]           = "Slot";
 $vocab["confirmation_settings"]   = "Aturan konfirmasi";
@@ -477,7 +467,6 @@ $vocab["invalid_RRULE"]               = "RRULE Invalid: masih kurang bagian FREQ
 $vocab["more_than_one_BYDAY"]         = "Sistem tidak mendukung lebih dari BYDAY ketika FREQ=";
 $vocab["BYDAY_equals_5"]              = "Sistem tidak mendukung nilai BYDAY dari 5";
 $vocab["unsupported_FREQ"]            = "Sistem tidak mendukung FREQ=";
-$vocab["unsupported_INTERVAL"]        = "Sistem tidak mendukung INTERVAL>1 dengan FREQ=";
 $vocab["unsupported_COUNT"]           = "COUNT belum didukung oleh Sistem";
 $vocab["no_indefinite_repeats"]       = "Sistem belum mendukung pengulangan yg tidak terdefinisi";
 $vocab["events_imported"]             = "Event telah diimpor";

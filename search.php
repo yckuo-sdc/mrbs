@@ -14,7 +14,7 @@ require "defaultincludes.inc";
 function get_search_nav_button(array $hidden_inputs, $value, $disabled=false)
 {
   $html = '';
-  
+
   $form = new Form();
   $form->setAttributes(array('action' => 'search.php',
                              'method' => 'post'));
@@ -24,56 +24,56 @@ function get_search_nav_button(array $hidden_inputs, $value, $disabled=false)
                                'disabled' => $disabled));
   $form->addElement($submit);
   $html .= $form->toHTML();
-  
+
   return $html;
 }
 
-  
+
 function generate_search_nav_html($search_pos, $total, $num_records, $search_str)
 {
   global $from_date;
   global $search;
-  
+
   $html = '';
-  
+
   $has_prev = $search_pos > 0;
   $has_next = $search_pos < ($total-$search["count"]);
-  
+
   if ($has_prev || $has_next)
   {
     $html .= "<div id=\"record_numbers\">\n";
     $html .= get_vocab("records") . ($search_pos+1) . get_vocab("through") . ($search_pos+$num_records) . get_vocab("of") . $total;
     $html .= "</div>\n";
-  
+
     $html .= "<div id=\"record_nav\">\n";
 
     // display "Previous" and "Next" buttons
     $hidden_inputs = array('search_str' => $search_str,
                            'total'      => $total,
                            'from_date'  => $from_date);
-                           
-    $hidden_inputs['search_pos'] = max(0, $search_pos - $search['count']);         
+
+    $hidden_inputs['search_pos'] = max(0, $search_pos - $search['count']);
     $html .= get_search_nav_button($hidden_inputs , get_vocab('previous'), !$has_prev);
-    
+
     $hidden_inputs['search_pos'] = max(0, $search_pos + $search['count']);
     $html .= get_search_nav_button($hidden_inputs , get_vocab('next'), !$has_next);
-  
+
     $html .= "</div>\n";
   }
-  
+
   return $html;
 }
 
 
 function output_row($row, $returl)
 {
-  global $ajax, $json_data;
-  
+  global $is_ajax, $json_data, $view;
+
   $vars = array('id'     => $row['entry_id'],
                 'returl' => $returl);
-                
+
   $query = http_build_query($vars, '', '&');
-  
+
   $values = array();
   // booking name
   $html_name = htmlspecialchars($row['name']);
@@ -82,7 +82,18 @@ function output_row($row, $returl)
   $values[] = htmlspecialchars($row['create_by']);
   // start time and link to day view
   $date = getdate($row['start_time']);
-  $link = "<a href=\"day.php?day=$date[mday]&amp;month=$date[mon]&amp;year=$date[year]&amp;area=".$row['area_id']."\">";
+
+  $vars = array('view'  => $view,
+                'year'  => $date['year'],
+                'month' => $date['mon'],
+                'day'   => $date['mday'],
+                'area'  => $row['area_id'],
+                'room'  => $row['room_id']);
+
+  $query = http_build_query($vars, '', '&');
+
+  $link = '<a href="index.php?' . htmlspecialchars($query) . '">';
+
   if(empty($row['enable_periods']))
   {
     $link_str = time_date_string($row['start_time']);
@@ -96,8 +107,8 @@ function output_row($row, $returl)
   $values[] = "<span title=\"" . $row['start_time'] . "\"></span>" . $link;
   // description
   $values[] = htmlspecialchars($row['description']);
-  
-  if ($ajax)
+
+  if ($is_ajax)
   {
     $json_data['aaData'][] = $values;
   }
@@ -108,13 +119,13 @@ function output_row($row, $returl)
     echo "</td>\n</tr>\n";
   }
 }
-  
+
+$is_ajax = is_ajax();
+
 // Get non-standard form variables
 $search_str = get_form_var('search_str', 'string');
 $search_pos = get_form_var('search_pos', 'int');
 $total = get_form_var('total', 'int');
-$advanced = get_form_var('advanced', 'int');
-$ajax = get_form_var('ajax', 'int');  // Set if this is an Ajax request
 $datatable = get_form_var('datatable', 'int');  // Will only be set if we're using DataTables
 // Get the start day/month/year and make them the current day/month/year
 $from_date = get_form_var('from_date', 'string');
@@ -142,18 +153,16 @@ if (isset($search_str) && ($search_str !== ''))
 }
 
 // Check the user is authorised for this page
-checkAuthorised();
+checkAuthorised(this_page());
 
-// Also need to know whether they have admin rights
 $user = getUserName();
-$is_admin =  (isset($user) && authGetUserLevel($user)>=2) ;
 
 // Set up for Ajax.   We need to know whether we're capable of dealing with Ajax
 // requests, which will only be if the browser is using DataTables.  We also need
 // to initialise the JSON data array.
 $ajax_capable = $datatable;
 
-if ($ajax)
+if ($is_ajax)
 {
   $json_data['aaData'] = array();
 }
@@ -165,63 +174,58 @@ if (!isset($search_str))
 
 $search_start_time = mktime(0, 0, 0, $month, $day, $year);
 
-if (!$ajax)
+if (!$is_ajax)
 {
-  print_header($day, $month, $year, $area, isset($room) ? $room : null, $search_str);
+  print_header($view, $view_all, $year, $month, $day, $area, isset($room) ? $room : null);
 
-  if (!empty($advanced))
-  {
-    $form = new Form();
-    $form->setAttributes(array('class'  => 'standard',
-                               'id'     => 'search_form',
-                               'method' => 'post',
-                               'action' => 'search.php'));
-                               
-    $fieldset = new ElementFieldset();
-    $fieldset->addLegend(get_vocab('advanced_search'));
-    
-    // Search string
-    $field = new FieldInputSearch();
-    $field->setLabel(get_vocab('search_for'))
-          ->setControlAttributes(array('name'      => 'search_str',
-                                       'required'  => true,
-                                       'autofocus' => true));
-    $fieldset->addElement($field);
-    
-    // From date
-    $field = new FieldInputDate();
-    $field->setLabel(get_vocab('from'))
-          ->setControlAttributes(array('name'      => 'from_date',
-                                       'value'     => $from_date,
-                                       'required'  => true));
-    $fieldset->addElement($field);
-    
-    // Submit button
-    $field = new FieldInputSubmit();
-    $field->setControlAttribute('value', get_vocab('search_button'));
-    $fieldset->addElement($field);
-    
-    $form->addElement($fieldset);
-    
-    $form->render();
-    
-    output_trailer();
-    exit;
-  }
+  $form = new Form();
+  $form->setAttributes(array('class'  => 'standard',
+                             'id'     => 'search_form',
+                             'method' => 'post',
+                             'action' => 'search.php'));
+
+  $fieldset = new ElementFieldset();
+  $fieldset->addLegend(get_vocab('search'));
+
+  // Search string
+  $field = new FieldInputSearch();
+  $field->setLabel(get_vocab('search_for'))
+        ->setControlAttributes(array('name'      => 'search_str',
+                                     'value'     => (isset($search_str)) ? $search_str : '',
+                                     'required'  => true,
+                                     'autofocus' => true));
+  $fieldset->addElement($field);
+
+  // From date
+  $field = new FieldInputDate();
+  $field->setLabel(get_vocab('from'))
+        ->setControlAttributes(array('name'      => 'from_date',
+                                     'value'     => $from_date,
+                                     'required'  => true));
+  $fieldset->addElement($field);
+
+  // Submit button
+  $field = new FieldInputSubmit();
+  $field->setControlAttribute('value', get_vocab('search_button'));
+  $fieldset->addElement($field);
+
+  $form->addElement($fieldset);
+
+  $form->render();
 
   if (!isset($search_str) || ($search_str === ''))
   {
     echo "<p class=\"error\">" . get_vocab("invalid_search") . "</p>";
-    output_trailer();
+    print_footer();
     exit;
   }
-  
-  echo "<h3>";
+
+  echo '<h3 class="search_results">';
   echo get_vocab("search_results",
                  htmlspecialchars($search_str),
                  htmlspecialchars(utf8_strftime($strftime_format['date_short'], $search_start_time)));
   echo "</h3>\n";
-}  // if (!$ajax)
+}  // if (!$is_ajax)
 
 
 // This is the main part of the query predicate, used in both queries:
@@ -241,7 +245,7 @@ foreach ($fields as $field)
   {
     // If we've got a field that is represented by an associative array of options
     // then we have to search for the keys whose values match the search string
-    if (isset($select_options["entry." . $field['name']]) && 
+    if (isset($select_options["entry." . $field['name']]) &&
         is_assoc($select_options["entry." . $field['name']]))
     {
       foreach($select_options["entry." . $field['name']] as $key => $value)
@@ -266,12 +270,19 @@ $sql_pred .= ") AND (E.end_time > ?)";
 $sql_params[] = $search_start_time;
 $sql_pred .= " AND (E.room_id = R.id) AND (R.area_id = A.id)";
 
+// We only want the bookings for rooms that are visible
+$invisible_room_ids = get_invisible_room_ids();
+if (count($invisible_room_ids) > 0)
+{
+  $sql_pred .= " AND (E.room_id NOT IN (" . implode(',', $invisible_room_ids) . "))";
+}
+
 
 // If we're not an admin (they are allowed to see everything), then we need
 // to make sure we respect the privacy settings.  (We rely on the privacy fields
 // in the area table being not NULL.   If they are by some chance NULL, then no
 // entries will be found, which is at least safe from the privacy viewpoint)
-if (!$is_admin)
+if (!is_book_admin())
 {
   if (isset($user))
   {
@@ -318,10 +329,10 @@ if (!isset($total))
   $total = db()->query1($sql, $sql_params);
 }
 
-if (($total <= 0) && !$ajax)
+if (($total <= 0) && !$is_ajax)
 {
   echo "<p id=\"nothing_found\">" . get_vocab("nothing_found") . "</p>\n";
-  output_trailer();
+  print_footer();
   exit;
 }
 
@@ -334,20 +345,20 @@ else if($search_pos >= $total)
   $search_pos = $total - ($total % $search["count"]);
 }
 
-// If we're Ajax capable and this is not an Ajax request then don't ouput
+// If we're Ajax capable and this is not an Ajax request then don't output
 // the table body, because that's going to be sent later in response to
 // an Ajax request - so we don't need to do the query
-if (!$ajax_capable || $ajax)
+if (!$ajax_capable || $is_ajax)
 {
   // Now we set up the "real" query
   $sql = "SELECT E.id AS entry_id, E.create_by, E.name, E.description, E.start_time,
-                 R.area_id, A.enable_periods
+                 E.room_id, R.area_id, A.enable_periods
             FROM $tbl_entry E, $tbl_room R, $tbl_area A
            WHERE $sql_pred
         ORDER BY E.start_time asc";
   // If it's an Ajax query we want everything.  Otherwise we use LIMIT to just get
   // the stuff we want.
-  if (!$ajax)
+  if (!$is_ajax)
   {
     $sql .= " " . db()->syntax_limit($search["count"], $search_pos);
   }
@@ -362,15 +373,15 @@ if (!$ajax_capable)
   echo generate_search_nav_html($search_pos, $total, $num_records, $search_str);
 }
 
-if (!$ajax)
+if (!$is_ajax)
 {
   echo "<div id=\"search_output\" class=\"datatable_container\">\n";
   echo "<table id=\"search_results\" class=\"admin_table display\"";
-  
+
   // Put the search parameters as data attributes so that the JavaScript can use them
   echo ' data-search_str="' . htmlspecialchars($search_str) . '"';
   echo ' data-from_date="' . htmlspecialchars($from_date) . '"';
-  
+
   echo ">\n";
   echo "<thead>\n";
   echo "<tr>\n";
@@ -384,20 +395,20 @@ if (!$ajax)
   echo "<tbody>\n";
 }
 
-// If we're Ajax capable and this is not an Ajax request then don't ouput
+// If we're Ajax capable and this is not an Ajax request then don't output
 // the table body, because that's going to be sent later in response to
 // an Ajax request
-if (!$ajax_capable || $ajax)
+if (!$ajax_capable || $is_ajax)
 {
   $returl = this_page() . "?search_str=$search_str&from_date=$from_date";
 
-  for ($i = 0; ($row = $result->row_keyed($i)); $i++)
+  while (false !== ($row = $result->next_row_keyed()))
   {
     output_row($row, $returl);
   }
 }
 
-if ($ajax)
+if ($is_ajax)
 {
   http_headers(array("Content-Type: application/json"));
   echo json_encode($json_data);
@@ -407,6 +418,6 @@ else
   echo "</tbody>\n";
   echo "</table>\n";
   echo "</div>\n";
-  output_trailer();
+  print_footer();
 }
 
